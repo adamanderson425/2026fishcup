@@ -187,6 +187,9 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
   position: relative; overflow: hidden;
 }
 .match-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.match-card.clickable { cursor: pointer; }
+.match-card.clickable:hover { border-color: var(--accent); }
+a.match-card-link { display: contents; text-decoration: none; color: inherit; }
 .match-card.clash { background: var(--clash-bg); border-color: var(--clash-border); }
 .match-card.played { opacity: 0.72; }
 .match-card.live { border-color: var(--live-green); }
@@ -640,6 +643,7 @@ function parseESPN(events) {
       awayWin: flipped ? homeComp.winner : awayComp.winner,
       status,
       clock,
+      espnId: ev.id, // used to link to ESPN match recap
     };
   });
 }
@@ -755,8 +759,16 @@ function renderMatchCard(m) {
   const homeWin = s?.homeWin ?? (s && s.home > s.away);
   const awayWin = s?.awayWin ?? (s && s.away > s.home);
 
-  const classes = ['match-card', clash && 'clash', played && 'played', live && 'live']
-    .filter(Boolean).join(' ');
+  const espnUrl = played && s?.espnId
+    ? `https://www.espn.com/soccer/match/_/gameId/${s.espnId}`
+    : null;
+
+  const classes = ['match-card',
+    clash   && 'clash',
+    played  && 'played',
+    live    && 'live',
+    espnUrl && 'clickable',
+  ].filter(Boolean).join(' ');
 
   const groupTag = m.g
     ? `<span class="card-group-tag">Group ${m.g}</span>`
@@ -766,7 +778,7 @@ function renderMatchCard(m) {
     ? `<div class="clash-footer">⚔ ${FAMILY[m.home].person} vs ${FAMILY[m.away].person}</div>`
     : '';
 
-  return `<div class="${classes}">
+  const cardInner = `<div class="${classes}">
     <div class="card-top">
       <span class="card-time">${displayTime} ET</span>
       <div class="card-meta">${groupTag}${renderStatusBadge(m.id)}</div>
@@ -779,6 +791,11 @@ function renderMatchCard(m) {
     </div>
     ${clashFooter}
   </div>`;
+
+  // Wrap finished cards in a link; upcoming/live cards are plain divs
+  return espnUrl
+    ? `<a class="match-card-link" href="${espnUrl}" target="_blank" rel="noopener noreferrer">${cardInner}</a>`
+    : cardInner;
 }
 
 // ═══════════════════════════════════════════════════════
