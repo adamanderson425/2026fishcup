@@ -290,6 +290,85 @@ a.match-card-link { display: contents; text-decoration: none; color: inherit; }
 }
 .empty-state .big { font-size: 40px; margin-bottom: 10px; }
 
+/* CONTENT LAYOUT — two-column when a team is selected */
+#content-layout { display: flex; gap: 20px; align-items: flex-start; }
+#matches-col { flex: 1; min-width: 0; }
+
+/* TEAM PANEL */
+#team-panel {
+  width: 300px; flex-shrink: 0;
+  position: sticky; top: 72px;
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  display: none; /* shown by JS */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.tpanel-header {
+  background: linear-gradient(135deg, #0d1b3e, #1a0a2e);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  padding: 16px; display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.tpanel-flag { font-size: 36px; line-height: 1; flex-shrink: 0; }
+.tpanel-name { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+.tpanel-picker { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+.tpanel-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+}
+.tpanel-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+}
+
+/* PLAYERS */
+.players-grid { display: flex; flex-direction: column; gap: 8px; }
+.player-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 7px 10px;
+  background: var(--surface2); border-radius: var(--radius-sm);
+}
+.player-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.player-meta { font-size: 11px; color: var(--muted); text-align: right; }
+.player-pos {
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; background: rgba(59,130,246,0.15);
+  color: var(--accent2); flex-shrink: 0;
+}
+
+/* NEWS */
+.news-list { display: flex; flex-direction: column; gap: 10px; }
+.news-item {
+  display: flex; gap: 10px; text-decoration: none; color: inherit;
+  padding: 8px; border-radius: var(--radius-sm);
+  background: var(--surface2); transition: background 0.15s;
+}
+.news-item:hover { background: rgba(59,130,246,0.1); }
+.news-thumb {
+  width: 64px; height: 48px; object-fit: cover;
+  border-radius: 6px; flex-shrink: 0; background: var(--surface2);
+}
+.news-thumb-placeholder {
+  width: 64px; height: 48px; flex-shrink: 0; border-radius: 6px;
+  background: var(--surface2); display: flex; align-items: center;
+  justify-content: center; font-size: 20px;
+}
+.news-content { min-width: 0; }
+.news-headline {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  line-height: 1.4; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.news-age { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.news-loading { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; }
+.news-empty  { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; }
+
+@media(max-width: 900px) {
+  #content-layout { flex-direction: column; }
+  #team-panel { width: 100%; position: static; max-height: none; display: none; }
+}
+
 /* FOOTER */
 footer {
   text-align: center; padding: 2rem 1rem;
@@ -366,8 +445,13 @@ footer {
     <button class="phase-tab" id="tab-final" onclick="setPhase('final')">Final</button>
   </div>
 
-  <div id="group-view"></div>
-  <div id="knockout-view" style="display:none"></div>
+  <div id="content-layout">
+    <div id="matches-col">
+      <div id="group-view"></div>
+      <div id="knockout-view" style="display:none"></div>
+    </div>
+    <aside id="team-panel"></aside>
+  </div>
 </main>
 
 <footer>
@@ -406,6 +490,100 @@ const FLAGS = {
   FRA:"🇫🇷",SEN:"🇸🇳",IRQ:"🇮🇶",NOR:"🇳🇴",ARG:"🇦🇷",ALG:"🇩🇿",
   ENG:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",CRO:"🇭🇷",UZB:"🇺🇿",COL:"🇨🇴",POR:"🇵🇹",COD:"🇨🇩",
   USA:"🇺🇸",AUS:"🇦🇺",SCO:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",HAI:"🇭🇹",GHA:"🇬🇭",PAN:"🇵🇦",
+};
+
+// KEY PLAYERS — shown in the team info panel when a family team is selected
+const KEY_PLAYERS = {
+  ENG: [
+    { name:"Jude Bellingham",  pos:"MF", club:"Real Madrid" },
+    { name:"Harry Kane",       pos:"FW", club:"Bayern Munich" },
+    { name:"Bukayo Saka",      pos:"FW", club:"Arsenal" },
+    { name:"Phil Foden",       pos:"MF", club:"Man City" },
+  ],
+  CPV: [
+    { name:"Garry Rodrigues",  pos:"FW", club:"Omonia" },
+    { name:"Ryan Mendes",      pos:"FW", club:"Vitória SC" },
+    { name:"Jamiro Monteiro",  pos:"MF", club:"Almería" },
+    { name:"Dylan Tavares",    pos:"DF", club:"Benfica" },
+  ],
+  NED: [
+    { name:"Virgil van Dijk",  pos:"DF", club:"Liverpool" },
+    { name:"Cody Gakpo",       pos:"FW", club:"Liverpool" },
+    { name:"Xavi Simons",      pos:"MF", club:"PSG" },
+    { name:"Tijjani Reijnders",pos:"MF", club:"AC Milan" },
+  ],
+  ESP: [
+    { name:"Pedri",            pos:"MF", club:"Barcelona" },
+    { name:"Lamine Yamal",     pos:"FW", club:"Barcelona" },
+    { name:"Rodri",            pos:"MF", club:"Man City" },
+    { name:"Dani Olmo",        pos:"MF", club:"Barcelona" },
+  ],
+  ARG: [
+    { name:"Lionel Messi",     pos:"FW", club:"Inter Miami" },
+    { name:"Julián Álvarez",   pos:"FW", club:"Atlético Madrid" },
+    { name:"Enzo Fernández",   pos:"MF", club:"Chelsea" },
+    { name:"Rodrigo De Paul",  pos:"MF", club:"Atlético Madrid" },
+  ],
+  FRA: [
+    { name:"Kylian Mbappé",    pos:"FW", club:"Real Madrid" },
+    { name:"Antoine Griezmann",pos:"FW", club:"Atlético Madrid" },
+    { name:"Aurélien Tchouaméni", pos:"MF", club:"Real Madrid" },
+    { name:"William Saliba",   pos:"DF", club:"Arsenal" },
+  ],
+  GER: [
+    { name:"Florian Wirtz",    pos:"MF", club:"Bayer Leverkusen" },
+    { name:"Jamal Musiala",    pos:"MF", club:"Bayern Munich" },
+    { name:"Kai Havertz",      pos:"FW", club:"Arsenal" },
+    { name:"Joshua Kimmich",   pos:"MF", club:"Bayern Munich" },
+  ],
+  BRA: [
+    { name:"Vinícius Jr",      pos:"FW", club:"Real Madrid" },
+    { name:"Rodrygo",          pos:"FW", club:"Real Madrid" },
+    { name:"Lucas Paquetá",    pos:"MF", club:"West Ham" },
+    { name:"Endrick",          pos:"FW", club:"Real Madrid" },
+  ],
+  POR: [
+    { name:"Cristiano Ronaldo",pos:"FW", club:"Al Nassr" },
+    { name:"Bruno Fernandes",  pos:"MF", club:"Man United" },
+    { name:"Bernardo Silva",   pos:"MF", club:"Man City" },
+    { name:"Rafael Leão",      pos:"FW", club:"AC Milan" },
+  ],
+  ECU: [
+    { name:"Moisés Caicedo",   pos:"MF", club:"Chelsea" },
+    { name:"Enner Valencia",   pos:"FW", club:"Internacional" },
+    { name:"Piero Hincapié",   pos:"DF", club:"Bayer Leverkusen" },
+    { name:"Jeremy Sarmiento", pos:"FW", club:"Brighton" },
+  ],
+  BEL: [
+    { name:"Kevin De Bruyne",  pos:"MF", club:"Man City" },
+    { name:"Romelu Lukaku",    pos:"FW", club:"Napoli" },
+    { name:"Leandro Trossard", pos:"FW", club:"Arsenal" },
+    { name:"Amadou Onana",     pos:"MF", club:"Aston Villa" },
+  ],
+  AUS: [
+    { name:"Mat Ryan",         pos:"GK", club:"Real Sociedad" },
+    { name:"Mitchell Duke",    pos:"FW", club:"Macarthur FC" },
+    { name:"Martin Boyle",     pos:"FW", club:"Panathinaikos" },
+    { name:"Riley McGree",     pos:"MF", club:"Middlesbrough" },
+  ],
+  USA: [
+    { name:"Christian Pulisic",pos:"FW", club:"AC Milan" },
+    { name:"Tyler Adams",      pos:"MF", club:"Bournemouth" },
+    { name:"Gio Reyna",        pos:"FW", club:"Nott'm Forest" },
+    { name:"Weston McKennie",  pos:"MF", club:"Juventus" },
+  ],
+  MAR: [
+    { name:"Achraf Hakimi",    pos:"DF", club:"PSG" },
+    { name:"Hakim Ziyech",     pos:"FW", club:"Galatasaray" },
+    { name:"Youssef En-Nesyri",pos:"FW", club:"Fenerbahçe" },
+    { name:"Sofyan Amrabat",   pos:"MF", club:"Fiorentina" },
+  ],
+  NOR: [
+    { name:"Erling Haaland",   pos:"FW", club:"Man City" },
+    { name:"Martin Ødegaard",  pos:"MF", club:"Arsenal" },
+    { name:"Alexander Sørloth",pos:"FW", club:"Atlético Madrid" },
+    { name:"Sander Berge",     pos:"MF", club:"Fulham" },
+  ],
 };
 
 function getFlag(code) {
@@ -515,6 +693,153 @@ async function loadScoreOverrides() {
   } catch(e) {
     // scores.json is optional
   }
+}
+
+// ═══════════════════════════════════════════════════════
+// TEAM PANEL — news + players
+// ═══════════════════════════════════════════════════════
+
+// Lazily populated: our 3-letter code → ESPN numeric team ID
+const _espnTeamIdCache = {};
+let _espnTeamIdFetchDone = false;
+
+async function resolveESPNTeamId(code) {
+  if (_espnTeamIdCache[code]) return _espnTeamIdCache[code];
+  if (!_espnTeamIdFetchDone) {
+    try {
+      const r = await fetch(
+        'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams?limit=200',
+        { signal: AbortSignal.timeout(6000) }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        const teams = d.sports?.[0]?.leagues?.[0]?.teams || [];
+        teams.forEach(t => {
+          const abbr = t.team?.abbreviation?.toUpperCase();
+          const id   = t.team?.id;
+          if (abbr && id) _espnTeamIdCache[abbr] = id;
+        });
+      }
+    } catch(e) {}
+    _espnTeamIdFetchDone = true;
+  }
+  return _espnTeamIdCache[code] || null;
+}
+
+function timeAgo(isoString) {
+  const diff = (Date.now() - new Date(isoString)) / 1000;
+  if (diff < 3600)  return Math.floor(diff / 60)  + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+async function fetchTeamNews(code) {
+  const panel = document.getElementById('team-panel');
+  const newsEl = panel?.querySelector('.tpanel-news-body');
+  if (!newsEl) return;
+
+  newsEl.innerHTML = '<div class="news-loading">Loading news…</div>';
+
+  try {
+    const espnId = await resolveESPNTeamId(code);
+    let articles = [];
+
+    if (espnId) {
+      // Team-specific news endpoint
+      const r = await fetch(
+        `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams/${espnId}/news?limit=6`,
+        { signal: AbortSignal.timeout(7000) }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        articles = d.articles || [];
+      }
+    }
+
+    // Fallback: search general WC news feed for the team name
+    if (articles.length === 0) {
+      const teamName = FAMILY[code]?.name || code;
+      const r = await fetch(
+        'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=40',
+        { signal: AbortSignal.timeout(7000) }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        const term = teamName.toLowerCase();
+        articles = (d.articles || [])
+          .filter(a => (a.headline + ' ' + (a.description || '')).toLowerCase().includes(term))
+          .slice(0, 6);
+      }
+    }
+
+    if (articles.length === 0) {
+      newsEl.innerHTML = '<div class="news-empty">No recent news found.</div>';
+      return;
+    }
+
+    newsEl.innerHTML = `<div class="news-list">${articles.map(a => {
+      const url   = a.links?.web?.href || '#';
+      const img   = a.images?.[0]?.url;
+      const age   = a.published ? timeAgo(a.published) : '';
+      const thumb = img
+        ? `<img class="news-thumb" src="${img}" alt="" loading="lazy">`
+        : `<div class="news-thumb-placeholder">📰</div>`;
+      return `<a class="news-item" href="${url}" target="_blank" rel="noopener noreferrer">
+        ${thumb}
+        <div class="news-content">
+          <div class="news-headline">${a.headline || 'Read article'}</div>
+          ${age ? `<div class="news-age">${age}</div>` : ''}
+        </div>
+      </a>`;
+    }).join('')}</div>`;
+  } catch(e) {
+    newsEl.innerHTML = '<div class="news-empty">Could not load news.</div>';
+  }
+}
+
+function renderTeamPanel(code) {
+  const panel = document.getElementById('team-panel');
+  if (!code) { panel.style.display = 'none'; return; }
+
+  const f = FAMILY[code];
+  if (!f) { panel.style.display = 'none'; return; }
+
+  const players = KEY_PLAYERS[code] || [];
+
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="tpanel-header">
+      <span class="tpanel-flag">${f.flag}</span>
+      <div>
+        <div class="tpanel-name">${f.name}</div>
+        <div class="tpanel-picker">🏆 ${f.person}'s pick</div>
+      </div>
+    </div>
+
+    ${players.length ? `
+    <div class="tpanel-section">
+      <div class="tpanel-section-title">Key Players</div>
+      <div class="players-grid">
+        ${players.map(p => `
+          <div class="player-row">
+            <div>
+              <div class="player-name">${p.name}</div>
+              <div class="player-meta">${p.club}</div>
+            </div>
+            <span class="player-pos">${p.pos}</span>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="tpanel-section">
+      <div class="tpanel-section-title">Recent News</div>
+      <div class="tpanel-news-body">
+        <div class="news-loading">Loading news…</div>
+      </div>
+    </div>
+  `;
+
+  fetchTeamNews(code); // async — fills in the news section when ready
 }
 
 // ═══════════════════════════════════════════════════════
@@ -925,6 +1250,7 @@ function toggleTeam(code) {
   document.getElementById('btn-family').classList.toggle('active', !selectedTeam && viewMode === 'family');
   saveState();
   renderTeamPills();
+  renderTeamPanel(selectedTeam); // show/hide right-hand panel
   render();
 }
 
@@ -952,6 +1278,7 @@ function applyPersistedState() {
   document.getElementById('loading-overlay').style.display = 'none';
   applyPersistedState();
   renderTeamPills();
+  renderTeamPanel(selectedTeam);
   render();
   fetchScores(); // first fetch also calls schedulePoll()
 })();
