@@ -1,0 +1,5 @@
+{
+  "_comment": "Manual score overrides. Keys are match IDs (as strings). Status: 'ft' | 'live' | 'sched'. These merge on top of ESPN API results, so you can correct wrong scores or fill gaps when the API returns nothing.",
+  "overrides": {
+  }
+}

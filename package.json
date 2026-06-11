@@ -1,0 +1,12 @@
+{
+  "name": "fwc26-family-schedule",
+  "version": "1.0.0",
+  "description": "FIFA World Cup 2026 family picks tracker",
+  "scripts": {
+    "dev": "node serve.js",
+    "dev:python": "python3 serve.py 3000"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
