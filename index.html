@@ -218,13 +218,16 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
   letter-spacing: 0.05em; text-transform: uppercase;
 }
 .status-live { background: rgba(16,185,129,0.18); color: var(--live-green); }
-.status-ft { background: rgba(148,163,184,0.12); color: var(--muted); }
-.status-up { background: rgba(59,130,246,0.10); color: var(--accent2); }
+.status-ft   { background: rgba(148,163,184,0.12); color: var(--muted); }
+.status-up   { background: rgba(59,130,246,0.10); color: var(--accent2); }
+.status-ht   { background: rgba(251,191,36,0.15); color: var(--gold2); }
 .live-dot {
   width: 6px; height: 6px; background: var(--live-green);
   border-radius: 50%; animation: pulse 1.4s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.score.win { color: #6ee7b7; }
+.team-code.winner { color: #6ee7b7; }
 
 /* TEAMS ROW */
 .teams-row {
@@ -556,6 +559,15 @@ async function fetchScores() {
     'Last updated: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   icon.classList.remove('spinning');
   render();
+  schedulePoll(); // re-schedule after every fetch so interval adapts
+}
+
+// Poll every 30 s when any match is live/at half-time; otherwise every 2 minutes.
+let _pollTimer = null;
+function schedulePoll() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  const hasLive = Object.values(scores).some(s => s.status === 'live' || s.status === 'ht');
+  _pollTimer = setInterval(fetchScores, hasLive ? 30_000 : 120_000);
 }
 
 function parseESPN(events) {
@@ -563,27 +575,71 @@ function parseESPN(events) {
   events.forEach(ev => {
     const comp = ev.competitions?.[0];
     if (!comp) return;
-    const status = ev.status?.type?.name || '';
+
+    // Use state + completed for reliable status — much more robust than matching
+    // individual status name strings (ESPN has ~15 different status names).
+    const statusType  = ev.status?.type || {};
+    const state       = statusType.state;       // "pre" | "in" | "post"
+    const completed   = statusType.completed;   // true when the match is over
+    const statusName  = statusType.name || '';
+    const displayClock = ev.status?.displayClock || ''; // "45:00", "0:00" at HT/FT
+    const shortDetail  = statusType.shortDetail  || ''; // "HT", "90'+2", "FT", "23:00 - 1st"
+
     const competitors = comp.competitors || [];
     if (competitors.length < 2) return;
-    const home = competitors.find(c => c.homeAway === 'home');
-    const away = competitors.find(c => c.homeAway === 'away');
-    if (!home || !away) return;
-    const hCode = home.team?.abbreviation?.toUpperCase();
-    const aCode = away.team?.abbreviation?.toUpperCase();
-    const hScore = parseInt(home.score) || 0;
-    const aScore = parseInt(away.score) || 0;
+    const homeComp = competitors.find(c => c.homeAway === 'home');
+    const awayComp = competitors.find(c => c.homeAway === 'away');
+    if (!homeComp || !awayComp) return;
+
+    const hCode  = homeComp.team?.abbreviation?.toUpperCase();
+    const aCode  = awayComp.team?.abbreviation?.toUpperCase();
+    const hScore = parseInt(homeComp.score) || 0;
+    const aScore = parseInt(awayComp.score) || 0;
+
     const match = allMatches.find(m =>
       (m.home === hCode && m.away === aCode) || (m.home === aCode && m.away === hCode)
     );
     if (!match) return;
     const flipped = match.away === hCode;
+
+    // Map to our three-state model
+    let status;
+    if (state === 'post' || completed === true) {
+      status = 'ft';
+    } else if (state === 'in') {
+      status = statusName === 'STATUS_HALFTIME' ? 'ht' : 'live';
+    } else {
+      status = 'sched';
+    }
+
+    // Build a human-readable clock string for live/ht
+    let clock = '';
+    if (status === 'live') {
+      if (shortDetail) {
+        // shortDetail looks like "45:00 - 1st Half" — grab just the minutes part
+        const minutePart = shortDetail.split(' - ')[0].trim();
+        // Convert "45:00" → "45'" or keep stoppage-time strings like "90'+3"
+        const colonIdx = minutePart.indexOf(':');
+        if (colonIdx !== -1) {
+          clock = parseInt(minutePart.slice(0, colonIdx), 10) + "'";
+        } else {
+          clock = minutePart; // already a nice string like "90'+2"
+        }
+      } else if (displayClock && displayClock !== '0:00') {
+        clock = parseInt(displayClock.split(':')[0], 10) + "'";
+      }
+    } else if (status === 'ht') {
+      clock = 'HT';
+    }
+
     scores[match.id] = {
       home:   flipped ? aScore : hScore,
       away:   flipped ? hScore : aScore,
-      status: status === 'STATUS_FINAL' ? 'ft'
-            : status === 'STATUS_IN_PROGRESS' ? 'live'
-            : 'sched',
+      // winner flags from ESPN competitor objects
+      homeWin: flipped ? awayComp.winner : homeComp.winner,
+      awayWin: flipped ? homeComp.winner : awayComp.winner,
+      status,
+      clock,
     };
   });
 }
@@ -642,7 +698,7 @@ function deriveMatchState(m) {
   return {
     score:   s || null,
     played:  s?.status === 'ft',
-    live:    s?.status === 'live',
+    live:    s?.status === 'live' || s?.status === 'ht',
     clash:   isClash(m),
     displayTime: to12h(m.time),
   };
@@ -653,8 +709,9 @@ function renderScoreBlock(matchId) {
   if (!s || s.status === 'sched') {
     return `<div class="score-block"><span class="score tbd">·:·</span></div>`;
   }
-  const hWin = s.home > s.away;
-  const aWin = s.away > s.home;
+  // Use ESPN's winner flags when available; fall back to score comparison
+  const hWin = s.homeWin ?? (s.home > s.away);
+  const aWin = s.awayWin ?? (s.away > s.home);
   return `<div class="score-block">
     <span class="score${hWin ? ' win' : ''}">${s.home}</span>
     <span class="score-sep">:</span>
@@ -664,20 +721,29 @@ function renderScoreBlock(matchId) {
 
 function renderStatusBadge(matchId) {
   const s = scores[matchId];
-  if (!s || s.status === 'sched') return `<span class="status-badge status-up">Upcoming</span>`;
-  if (s.status === 'live') return `<span class="status-badge status-live"><span class="live-dot"></span>Live</span>`;
+  if (!s || s.status === 'sched') {
+    return `<span class="status-badge status-up">Upcoming</span>`;
+  }
+  if (s.status === 'ht') {
+    return `<span class="status-badge status-ht">Half Time</span>`;
+  }
+  if (s.status === 'live') {
+    const label = s.clock || 'Live';
+    return `<span class="status-badge status-live"><span class="live-dot"></span>${label}</span>`;
+  }
   return `<span class="status-badge status-ft">FT</span>`;
 }
 
-function renderTeamBlock(code, side) {
+function renderTeamBlock(code, side, isWinner) {
   const f = FAMILY[code];
   const fl = getFlag(code);
   const displayName = f ? f.name : code;
   const person = f ? `<div class="team-person">${f.person}</div>` : '';
+  const winClass = isWinner ? ' winner' : '';
   return `<div class="team ${side}">
     <span class="team-flag">${fl}</span>
     <div class="team-info">
-      <div class="team-code">${displayName}</div>
+      <div class="team-code${winClass}">${displayName}</div>
       ${person}
     </div>
   </div>`;
@@ -685,6 +751,9 @@ function renderTeamBlock(code, side) {
 
 function renderMatchCard(m) {
   const { played, live, clash, displayTime } = deriveMatchState(m);
+  const s = scores[m.id];
+  const homeWin = s?.homeWin ?? (s && s.home > s.away);
+  const awayWin = s?.awayWin ?? (s && s.away > s.home);
 
   const classes = ['match-card', clash && 'clash', played && 'played', live && 'live']
     .filter(Boolean).join(' ');
@@ -704,9 +773,9 @@ function renderMatchCard(m) {
     </div>
     <div class="card-venue">${m.venue}</div>
     <div class="teams-row">
-      ${renderTeamBlock(m.home, 'home')}
+      ${renderTeamBlock(m.home, 'home', played && homeWin)}
       ${renderScoreBlock(m.id)}
-      ${renderTeamBlock(m.away, 'away')}
+      ${renderTeamBlock(m.away, 'away', played && awayWin)}
     </div>
     ${clashFooter}
   </div>`;
@@ -867,8 +936,7 @@ function applyPersistedState() {
   applyPersistedState();
   renderTeamPills();
   render();
-  fetchScores();
-  setInterval(fetchScores, 120_000);
+  fetchScores(); // first fetch also calls schedulePoll()
 })();
 </script>
 </body>
