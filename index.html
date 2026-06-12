@@ -416,6 +416,124 @@ footer {
   .phase-tabs { gap: 4px; }
   .phase-tab { padding: 6px 11px; font-size: 12px; }
 }
+
+/* ── ARSENAL MODE ─────────────────────────────────────── */
+/* Button */
+.arsenal-btn {
+  background: #EF0107 !important;
+  border-color: #EF0107 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.arsenal-btn:hover {
+  background: #c40006 !important;
+  border-color: #C6A84B !important;
+}
+.arsenal-btn.active {
+  background: #b00005 !important;
+  border-color: #C6A84B !important;
+  box-shadow: 0 0 0 2px #C6A84B;
+  color: #fff !important;
+}
+
+/* Full-page theme when Arsenal Mode is on */
+body.arsenal-mode {
+  --bg:           #0d0001;
+  --surface:      #023474;
+  --surface2:     #012455;
+  --border:       rgba(198,168,75,0.25);
+  --border2:      rgba(198,168,75,0.45);
+  --text:         #ffffff;
+  --muted:        rgba(255,255,255,0.58);
+  --accent:       #C6A84B;
+  --accent2:      #d4bb6a;
+  --gold:         #C6A84B;
+  --gold2:        #d4bb6a;
+  --clash-bg:     rgba(198,168,75,0.12);
+  --clash-border: rgba(198,168,75,0.55);
+}
+body.arsenal-mode header {
+  background: linear-gradient(135deg, #EF0107 0%, #a80004 50%, #cc0005 100%);
+  border-bottom-color: rgba(198,168,75,0.4);
+}
+body.arsenal-mode .hero {
+  background: linear-gradient(135deg, #EF0107 0%, #a80004 100%);
+  border-bottom-color: rgba(198,168,75,0.25);
+}
+body.arsenal-mode .hero-eyebrow { color: #C6A84B; }
+body.arsenal-mode .phase-tab.active {
+  background: #023474;
+  border-color: #C6A84B;
+  color: #fff;
+}
+body.arsenal-mode .phase-tab:hover { color: #C6A84B; }
+body.arsenal-mode .match-card {
+  background: #023474;
+  border-color: rgba(198,168,75,0.2);
+}
+body.arsenal-mode .match-card:hover { border-color: #C6A84B; }
+body.arsenal-mode .match-card.clickable:hover { border-color: #C6A84B; }
+body.arsenal-mode .card-group-tag {
+  background: rgba(198,168,75,0.18);
+  color: #C6A84B;
+}
+body.arsenal-mode .team-pill {
+  background: #023474;
+  border-color: rgba(198,168,75,0.25);
+}
+body.arsenal-mode .team-pill:hover { border-color: #C6A84B; color: #C6A84B; }
+body.arsenal-mode .team-pill.selected {
+  background: rgba(198,168,75,0.2);
+  border-color: #C6A84B;
+  color: #C6A84B;
+}
+body.arsenal-mode .pill-btn { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
+body.arsenal-mode .pill-btn:hover { border-color: #C6A84B; color: #C6A84B; }
+body.arsenal-mode .pill-btn.active { background: #C6A84B; border-color: #C6A84B; color: #0d0001; }
+body.arsenal-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
+body.arsenal-mode .arsenal-btn.active { background: #b00005 !important; border-color: #C6A84B !important; box-shadow: 0 0 0 2px #C6A84B; }
+body.arsenal-mode .past-section .past-summary { color: rgba(255,255,255,0.55); }
+body.arsenal-mode footer { border-top-color: rgba(198,168,75,0.2); }
+body.arsenal-mode .section-label { color: #C6A84B; }
+body.arsenal-mode .section-line { background: rgba(198,168,75,0.2); }
+
+/* Arsenal player badges on cards */
+.arsenal-players {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(198,168,75,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.arsenal-team-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.arsenal-team-flag { font-size: 13px; flex-shrink: 0; }
+.arsenal-player-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: rgba(239,1,7,0.85);
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+body.arsenal-mode .arsenal-player-badge {
+  background: #EF0107;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.arsenal-derby-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 800;
+  color: #C6A84B;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+body.arsenal-mode .arsenal-derby-label { color: #d4bb6a; }
 </style>
 </head>
 <body>
@@ -437,6 +555,7 @@ footer {
     <div class="header-controls">
       <button class="pill-btn active" id="btn-all"    onclick="setViewMode('all')">All matches</button>
       <button class="pill-btn clash-btn" id="btn-family" onclick="setViewMode('family')">⚔ Family only</button>
+      <button class="pill-btn arsenal-btn" id="btn-arsenal" onclick="toggleArsenalMode()">🔴 Arsenal Mode</button>
     </div>
   </div>
 </header>
@@ -607,6 +726,34 @@ const KEY_PLAYERS = {
   ],
 };
 
+// Arsenal players per match — keyed by match id.
+// players: { TEAM_CODE: ["Player Name", ...] }
+// arsenalDerby: true when both teams have Arsenal players
+const ARSENAL_MATCHES = {
+  9:  { players: { GER: ["Kai Havertz"] } },
+  11: { players: { ECU: ["Piero Hincapié"] } },
+  12: { players: { SWE: ["Viktor Gyökeres"] } },
+  13: { players: { ESP: ["David Raya", "Martin Zubimendi", "Mikel Merino"] } },
+  16: { players: { BEL: ["Leandro Trossard"] } },
+  17: { players: { FRA: ["William Saliba"] } },
+  18: { players: { NOR: ["Martin Ødegaard"] } },
+  21: { players: { ENG: ["Declan Rice", "Bukayo Saka", "Eberechi Eze", "Noni Madueke"] } },
+  33: { players: { NOR: ["Martin Ødegaard"] } },
+  34: { players: { GER: ["Kai Havertz"] } },
+  35: { players: { SWE: ["Viktor Gyökeres"] } },
+  37: { players: { ESP: ["David Raya", "Martin Zubimendi", "Mikel Merino"] } },
+  41: { players: { ENG: ["Declan Rice", "Bukayo Saka", "Eberechi Eze", "Noni Madueke"] } },
+  42: { players: { FRA: ["William Saliba"] } },
+  43: { players: { BEL: ["Leandro Trossard"] } },
+  49: { players: { ECU: ["Piero Hincapié"], GER: ["Kai Havertz"] }, arsenalDerby: true },
+  50: { players: { BRA: ["Gabriel Magalhães", "Gabriel Martinelli"] } },
+  57: { players: { SWE: ["Viktor Gyökeres"] } },
+  60: { players: { BEL: ["Leandro Trossard"] } },
+  61: { players: { ENG: ["Declan Rice", "Bukayo Saka", "Eberechi Eze", "Noni Madueke"] } },
+  65: { players: { ESP: ["David Raya", "Martin Zubimendi", "Mikel Merino"] } },
+  66: { players: { NOR: ["Martin Ødegaard"], FRA: ["William Saliba"] }, arsenalDerby: true },
+};
+
 function getFlag(code) {
   return FAMILY[code]?.flag || FLAGS[code] || "🏳️";
 }
@@ -703,6 +850,7 @@ let scores          = {};
 let viewMode        = 'all';
 let activePhase     = 'group';
 let selectedTeam    = null;
+let arsenalMode     = false;
 
 // ═══════════════════════════════════════════════════════
 // PERSISTENCE
@@ -710,7 +858,7 @@ let selectedTeam    = null;
 
 function saveState() {
   try {
-    localStorage.setItem('fwc26_state', JSON.stringify({ viewMode, activePhase, selectedTeam }));
+    localStorage.setItem('fwc26_state', JSON.stringify({ viewMode, activePhase, selectedTeam, arsenalMode }));
   } catch(e) {}
 }
 
@@ -720,6 +868,7 @@ function loadState() {
     if (s.viewMode) viewMode = s.viewMode;
     if (s.activePhase) activePhase = s.activePhase;
     if (s.selectedTeam !== undefined) selectedTeam = s.selectedTeam;
+    if (s.arsenalMode !== undefined) arsenalMode = s.arsenalMode;
   } catch(e) {}
 }
 
@@ -1070,6 +1219,7 @@ function isFamilyTeam(code) { return !!FAMILY[code]; }
 function isKnockoutPlaceholder(code) { return /^[W12L3]/.test(code); }
 
 function matchPassesFilter(m) {
+  if (arsenalMode) return !!ARSENAL_MATCHES[m.id];
   if (selectedTeam) return m.home === selectedTeam || m.away === selectedTeam;
   if (viewMode === 'family') return isFamilyTeam(m.home) || isFamilyTeam(m.away);
   return true;
@@ -1191,6 +1341,27 @@ function renderMatchCard(m) {
     ? `<div class="clash-footer">⚔ ${FAMILY[m.home].person} vs ${FAMILY[m.away].person}</div>`
     : '';
 
+  // Arsenal player badges — only shown when Arsenal Mode is active
+  const arsenalData = ARSENAL_MATCHES[m.id];
+  let arsenalFooter = '';
+  if (arsenalMode && arsenalData) {
+    const rows = [m.home, m.away]
+      .filter(code => arsenalData.players?.[code]?.length)
+      .map(code => {
+        const badges = arsenalData.players[code]
+          .map(p => `<span class="arsenal-player-badge">⚪ ${p}</span>`)
+          .join('');
+        return `<div class="arsenal-team-row">
+          <span class="arsenal-team-flag">${getFlag(code)}</span>${badges}
+        </div>`;
+      })
+      .join('');
+    const derbyLabel = arsenalData.arsenalDerby
+      ? `<div class="arsenal-derby-label">⚡ Arsenal vs. Arsenal!</div>`
+      : '';
+    arsenalFooter = `<div class="arsenal-players">${rows}${derbyLabel}</div>`;
+  }
+
   const cardInner = `<div class="${classes}">
     <div class="card-top">
       <span class="card-time">${displayTime} ET</span>
@@ -1202,7 +1373,7 @@ function renderMatchCard(m) {
       ${renderScoreBlock(m.id)}
       ${renderTeamBlock(m.away, 'away', played && awayWin)}
     </div>
-    ${clashFooter}
+    ${clashFooter}${arsenalFooter}
   </div>`;
 
   // Wrap finished cards in a link; upcoming/live cards are plain divs
@@ -1349,6 +1520,20 @@ function renderTeamPills() {
 // CONTROLS
 // ═══════════════════════════════════════════════════════
 
+function toggleArsenalMode() {
+  arsenalMode = !arsenalMode;
+  document.body.classList.toggle('arsenal-mode', arsenalMode);
+  document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
+  // When entering Arsenal mode, clear team filter so it doesn't conflict
+  if (arsenalMode) {
+    selectedTeam = null;
+    renderTeamPanel(null);
+    renderTeamPills();
+  }
+  saveState();
+  render();
+}
+
 function setViewMode(v) {
   viewMode = v;
   selectedTeam = null;
@@ -1380,6 +1565,8 @@ function toggleTeam(code) {
 function applyPersistedState() {
   document.getElementById('btn-all').classList.toggle('active', !selectedTeam && viewMode === 'all');
   document.getElementById('btn-family').classList.toggle('active', !selectedTeam && viewMode === 'family');
+  document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
+  document.body.classList.toggle('arsenal-mode', arsenalMode);
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
