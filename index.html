@@ -678,8 +678,8 @@ body.arsenal-mode .arsenal-players {
     <div class="header-controls">
       <button class="pill-btn active" id="btn-all"    onclick="setViewMode('all')">All matches</button>
       <button class="pill-btn clash-btn" id="btn-family" onclick="setViewMode('family')">⚔ Family only</button>
-      <button class="pill-btn arsenal-btn" id="btn-arsenal" onclick="toggleArsenalMode()">🔴 Arsenal Mode</button>
-      <button class="pill-btn spurs-btn"   id="btn-spurs"   onclick="toggleSpursMode()">⚪ Spurs Mode</button>
+      <button class="pill-btn arsenal-btn" id="btn-arsenal" onclick="toggleArsenalMode()">🏆 Arsenal Mode</button>
+      <button class="pill-btn spurs-btn"   id="btn-spurs"   onclick="toggleSpursMode()">💩 Spurs Mode</button>
     </div>
   </div>
 </header>
@@ -1507,7 +1507,7 @@ function renderMatchCard(m) {
       .filter(code => arsenalData.players?.[code]?.length)
       .map(code => {
         const badges = arsenalData.players[code]
-          .map(p => `<span class="arsenal-player-badge">⚪ ${p}</span>`)
+          .map(p => `<span class="arsenal-player-badge">🏆 ${p}</span>`)
           .join('');
         return `<div class="arsenal-team-row">
           <span class="arsenal-team-flag">${getFlag(code)}</span>${badges}
@@ -1528,7 +1528,7 @@ function renderMatchCard(m) {
       .filter(code => spursData.players?.[code]?.length)
       .map(code => {
         const badges = spursData.players[code]
-          .map(p => `<span class="spurs-player-badge">⚪ ${p}</span>`)
+          .map(p => `<span class="spurs-player-badge">💩 ${p}</span>`)
           .join('');
         return `<div class="arsenal-team-row">
           <span class="arsenal-team-flag">${getFlag(code)}</span>${badges}
