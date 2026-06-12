@@ -224,6 +224,27 @@ a.match-card-link { display: contents; text-decoration: none; color: inherit; }
 .status-ft   { background: rgba(148,163,184,0.12); color: var(--muted); }
 .status-up   { background: rgba(59,130,246,0.10); color: var(--accent2); }
 .status-ht   { background: rgba(251,191,36,0.15); color: var(--gold2); }
+.status-past { background: rgba(148,163,184,0.06); color: var(--muted); }
+
+/* PAST MATCHES COLLAPSIBLE */
+.past-section { margin-top: 2rem; }
+.past-summary {
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 8px 2px; border: none; background: none; width: 100%;
+}
+.past-summary::-webkit-details-marker { display: none; }
+.past-toggle-icon { font-size: 9px; transition: transform 0.2s; flex-shrink: 0; }
+details[open] .past-toggle-icon { transform: rotate(90deg); }
+.past-count {
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+}
+.past-summary-line { flex: 1; height: 1px; background: var(--border); }
+.past-grid-wrapper { padding-top: 4px; }
 .live-dot {
   width: 6px; height: 6px; background: var(--live-green);
   border-radius: 50%; animation: pulse 1.4s infinite;
@@ -621,6 +642,37 @@ function to12h(t) {
   return `${h}:${m}${ampm}`;
 }
 
+// Derive the correct day-of-week label from the ISO date — avoids the
+// off-by-one error that was baked into the original schedule strings.
+function formatSectionDate(dateStr) {
+  const iso = DATE_ISO[dateStr];
+  if (!iso) return dateStr; // fallback to raw string
+  const [y, mo, d] = iso.split('-').map(Number);
+  const dt = new Date(y, mo - 1, d); // local midnight — no timezone shift
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${DAYS[dt.getDay()]} ${MONS[dt.getMonth()]} ${dt.getDate()}`;
+}
+
+// Current time expressed as "YYYY-MM-DDTHH:MM" in ET (EDT = UTC-4).
+// FWC 2026 runs Jun–Jul so EDT applies for the full tournament.
+function getETNowKey() {
+  return new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().slice(0, 16);
+}
+
+// True when a match is definitively over OR its kickoff was 3+ hours ago
+// (heuristic for when the ESPN API has stopped returning it).
+function isMatchPast(m) {
+  const s = scores[m.id];
+  if (s?.status === 'ft')   return true;
+  if (s?.status === 'live' || s?.status === 'ht') return false;
+  // Time-based: treat the sort-key value as "fake UTC" so arithmetic works
+  // (matchSortKey and getETNowKey both subtract 4 h, so differences cancel).
+  const kickoffMs = new Date(matchSortKey(m) + ':00Z').getTime();
+  const nowMs     = new Date(getETNowKey()    + ':00Z').getTime();
+  return (nowMs - kickoffMs) >= 3 * 60 * 60 * 1000; // 3 h after kickoff
+}
+
 // Returns sortable string "YYYY-MM-DDTHH:MM"
 function matchSortKey(m) {
   const iso = DATE_ISO[m.date] || '2026-99-99';
@@ -693,6 +745,24 @@ async function loadScoreOverrides() {
   } catch(e) {
     // scores.json is optional
   }
+}
+
+// Persist scores to localStorage so yesterday's FT results survive page
+// reloads even after ESPN drops them from the scoreboard feed.
+function saveScores() {
+  try { localStorage.setItem('fwc26_scores', JSON.stringify(scores)); } catch(e) {}
+}
+
+// Merge cached scores in as a baseline. Fresh API data and manual overrides
+// always win (they are applied after this call).
+function loadCachedScores() {
+  try {
+    const cached = JSON.parse(localStorage.getItem('fwc26_scores') || '{}');
+    Object.entries(cached).forEach(([id, s]) => {
+      const numId = parseInt(id, 10);
+      if (!scores[numId]) scores[numId] = s; // don't overwrite fresher data
+    });
+  } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════════════
@@ -862,18 +932,32 @@ async function fetchScores() {
   } catch(e) {}
 
   try {
-    const urls = [
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.worldq/scoreboard',
+    // Fetch today AND yesterday in ET so matches that finished late yesterday
+    // remain marked FT after midnight. ESPN uses ?dates=YYYYMMDD.
+    const fmtDate = d => new Date(d - 4 * 60 * 60 * 1000).toISOString().slice(0,10).replace(/-/g,'');
+    const todayStr = fmtDate(Date.now());
+    const yesterdayStr = fmtDate(Date.now() - 86400000);
+
+    const scoreboardUrls = [
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${todayStr}`,
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${yesterdayStr}`,
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard', // undated fallback
     ];
-    let data = null;
-    for (const url of urls) {
+
+    const allEvents = [];
+    const seenIds = new Set();
+    for (const url of scoreboardUrls) {
       try {
         const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
-        if (r.ok) { data = await r.json(); break; }
+        if (r.ok) {
+          const d = await r.json();
+          (d.events || []).forEach(ev => {
+            if (ev.id && !seenIds.has(ev.id)) { seenIds.add(ev.id); allEvents.push(ev); }
+          });
+        }
       } catch(e) {}
     }
-    if (data?.events) parseESPN(data.events);
+    if (allEvents.length > 0) parseESPN(allEvents);
   } catch(e) {
     document.getElementById('last-updated').textContent = 'Could not fetch scores — showing scheduled times';
   }
@@ -882,6 +966,8 @@ async function fetchScores() {
   Object.entries(overrides).forEach(([idStr, s]) => {
     scores[parseInt(idStr, 10)] = s;
   });
+
+  saveScores(); // persist so yesterday's FT results survive a page reload
 
   document.getElementById('last-updated').textContent =
     'Last updated: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -961,14 +1047,13 @@ function parseESPN(events) {
     }
 
     scores[match.id] = {
-      home:   flipped ? aScore : hScore,
-      away:   flipped ? hScore : aScore,
-      // winner flags from ESPN competitor objects
+      home:    flipped ? aScore : hScore,
+      away:    flipped ? hScore : aScore,
       homeWin: flipped ? awayComp.winner : homeComp.winner,
       awayWin: flipped ? homeComp.winner : awayComp.winner,
       status,
       clock,
-      espnId: ev.id, // used to link to ESPN match recap
+      espnId:  ev.id, // stored for ALL statuses so upcoming matches can be linked too
     };
   });
 }
@@ -1025,10 +1110,10 @@ function formatNextMatch(m) {
 function deriveMatchState(m) {
   const s = scores[m.id];
   return {
-    score:   s || null,
-    played:  s?.status === 'ft',
-    live:    s?.status === 'live' || s?.status === 'ht',
-    clash:   isClash(m),
+    score:       s || null,
+    played:      isMatchPast(m),   // robust: FT flag OR 3h heuristic
+    live:        s?.status === 'live' || s?.status === 'ht',
+    clash:       isClash(m),
     displayTime: to12h(m.time),
   };
 }
@@ -1048,19 +1133,17 @@ function renderScoreBlock(matchId) {
   </div>`;
 }
 
-function renderStatusBadge(matchId) {
-  const s = scores[matchId];
-  if (!s || s.status === 'sched') {
-    return `<span class="status-badge status-up">Upcoming</span>`;
-  }
-  if (s.status === 'ht') {
-    return `<span class="status-badge status-ht">Half Time</span>`;
-  }
-  if (s.status === 'live') {
+function renderStatusBadge(m) {
+  const s = scores[m.id];
+  if (s?.status === 'ht')   return `<span class="status-badge status-ht">Half Time</span>`;
+  if (s?.status === 'live') {
     const label = s.clock || 'Live';
     return `<span class="status-badge status-live"><span class="live-dot"></span>${label}</span>`;
   }
-  return `<span class="status-badge status-ft">FT</span>`;
+  if (s?.status === 'ft')   return `<span class="status-badge status-ft">FT</span>`;
+  // No API data — use time heuristic
+  if (isMatchPast(m))       return `<span class="status-badge status-past">Past</span>`;
+  return `<span class="status-badge status-up">Upcoming</span>`;
 }
 
 function renderTeamBlock(code, side, isWinner) {
@@ -1084,7 +1167,8 @@ function renderMatchCard(m) {
   const homeWin = s?.homeWin ?? (s && s.home > s.away);
   const awayWin = s?.awayWin ?? (s && s.away > s.home);
 
-  const espnUrl = played && s?.espnId
+  // Link any match ESPN knows about — past recap OR upcoming preview
+  const espnUrl = s?.espnId
     ? `https://www.espn.com/soccer/match/_/gameId/${s.espnId}`
     : null;
 
@@ -1106,7 +1190,7 @@ function renderMatchCard(m) {
   const cardInner = `<div class="${classes}">
     <div class="card-top">
       <span class="card-time">${displayTime} ET</span>
-      <div class="card-meta">${groupTag}${renderStatusBadge(m.id)}</div>
+      <div class="card-meta">${groupTag}${renderStatusBadge(m)}</div>
     </div>
     <div class="card-venue">${m.venue}</div>
     <div class="teams-row">
@@ -1135,18 +1219,51 @@ function render() {
   }
 }
 
-function renderDateSections(matches) {
+function groupByDate(matches) {
   const byDate = {};
-  matches.forEach(m => {
-    (byDate[m.date] = byDate[m.date] || []).push(m);
-  });
+  matches.forEach(m => { (byDate[m.date] = byDate[m.date] || []).push(m); });
+  return byDate;
+}
+
+function renderDateGroups(byDate, firstNoTopMargin = true) {
   return Object.entries(byDate).map(([date, group], i) => `
-    <div class="section-header${i === 0 ? ' style="margin-top:0"' : ''}">
-      <span class="section-label">${date}</span>
+    <div class="section-header${firstNoTopMargin && i === 0 ? ' style="margin-top:0"' : ''}">
+      <span class="section-label">${formatSectionDate(date)}</span>
       <div class="section-line"></div>
     </div>
     <div class="match-grid">${group.map(renderMatchCard).join('')}</div>
   `).join('');
+}
+
+function renderDateSections(matches) {
+  const past   = matches.filter(m =>  isMatchPast(m));
+  const active = matches.filter(m => !isMatchPast(m));
+
+  let html = '';
+
+  if (active.length > 0) {
+    html += renderDateGroups(groupByDate(active), true);
+  }
+
+  if (past.length > 0) {
+    // Show most-recent date first inside the collapsible
+    const byDate = groupByDate(past);
+    const reversed = Object.fromEntries(Object.entries(byDate).reverse());
+    html += `
+      <details class="past-section">
+        <summary class="past-summary">
+          <span class="past-toggle-icon">▶</span>
+          Previous Matches
+          <span class="past-count">${past.length}</span>
+          <span class="past-summary-line"></span>
+        </summary>
+        <div class="past-grid-wrapper">
+          ${renderDateGroups(reversed, false)}
+        </div>
+      </details>`;
+  }
+
+  return html;
 }
 
 function renderGroupStage() {
@@ -1275,6 +1392,7 @@ function applyPersistedState() {
       `<span style="font-size:24px">⚠️</span><span>Could not load match data.<br>Make sure you're running via <code>npm run dev</code>.</span>`;
     return;
   }
+  loadCachedScores(); // baseline from previous session; API data will overwrite
   document.getElementById('loading-overlay').style.display = 'none';
   applyPersistedState();
   renderTeamPills();
