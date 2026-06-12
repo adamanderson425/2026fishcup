@@ -611,22 +611,26 @@ function getFlag(code) {
   return FAMILY[code]?.flag || FLAGS[code] || "🏳️";
 }
 
-// ISO dates used for sorting and "next match" logic
+// ISO dates used for sorting and display.
+// Every value is shifted one day earlier vs. the original schedule data,
+// which was built with the wrong tournament start date (Jun 12 instead of Jun 11).
+// The date STRINGS (keys) come from matches.json and are kept as-is;
+// only the ISO values used for sorting/display have been corrected.
 const DATE_ISO = {
-  "Thu Jun 12":"2026-06-12","Fri Jun 13":"2026-06-13","Sat Jun 14":"2026-06-14",
-  "Sun Jun 15":"2026-06-15","Mon Jun 16":"2026-06-16","Tue Jun 17":"2026-06-17",
-  "Wed Jun 18":"2026-06-18","Thu Jun 19":"2026-06-19","Fri Jun 20":"2026-06-20",
-  "Sat Jun 21":"2026-06-21","Sun Jun 22":"2026-06-22","Mon Jun 23":"2026-06-23",
-  "Tue Jun 24":"2026-06-24","Wed Jun 25":"2026-06-25","Thu Jun 26":"2026-06-26",
-  "Fri Jun 27":"2026-06-27","Sat Jun 28":"2026-06-28",
-  "Sun Jun 29":"2026-06-29","Mon Jun 30":"2026-06-30",
-  "Tue Jul 1":"2026-07-01","Wed Jul 2":"2026-07-02","Thu Jul 3":"2026-07-03",
-  "Fri Jul 4":"2026-07-04","Sat Jul 5":"2026-07-05","Sun Jul 6":"2026-07-06",
-  "Mon Jul 7":"2026-07-07","Tue Jul 8":"2026-07-08","Wed Jul 9":"2026-07-09",
-  "Thu Jul 10":"2026-07-10","Fri Jul 11":"2026-07-11","Sat Jul 11":"2026-07-11",
-  "Sun Jul 12":"2026-07-12","Mon Jul 13":"2026-07-13","Tue Jul 14":"2026-07-14",
-  "Wed Jul 15":"2026-07-15","Thu Jul 16":"2026-07-16",
-  "Sat Jul 18":"2026-07-18","Sun Jul 19":"2026-07-19",
+  "Thu Jun 12":"2026-06-11","Fri Jun 13":"2026-06-12","Sat Jun 14":"2026-06-13",
+  "Sun Jun 15":"2026-06-14","Mon Jun 16":"2026-06-15","Tue Jun 17":"2026-06-16",
+  "Wed Jun 18":"2026-06-17","Thu Jun 19":"2026-06-18","Fri Jun 20":"2026-06-19",
+  "Sat Jun 21":"2026-06-20","Sun Jun 22":"2026-06-21","Mon Jun 23":"2026-06-22",
+  "Tue Jun 24":"2026-06-23","Wed Jun 25":"2026-06-24","Thu Jun 26":"2026-06-25",
+  "Fri Jun 27":"2026-06-26","Sat Jun 28":"2026-06-27",
+  "Sun Jun 29":"2026-06-28","Mon Jun 30":"2026-06-29",
+  "Tue Jul 1":"2026-06-30","Wed Jul 2":"2026-07-01","Thu Jul 3":"2026-07-02",
+  "Fri Jul 4":"2026-07-03","Sat Jul 5":"2026-07-04","Sun Jul 6":"2026-07-05",
+  "Mon Jul 7":"2026-07-06","Tue Jul 8":"2026-07-07","Wed Jul 9":"2026-07-08",
+  "Thu Jul 10":"2026-07-09","Fri Jul 11":"2026-07-10","Sat Jul 11":"2026-07-10",
+  "Sun Jul 12":"2026-07-11","Mon Jul 13":"2026-07-12","Tue Jul 14":"2026-07-13",
+  "Wed Jul 15":"2026-07-14","Thu Jul 16":"2026-07-15",
+  "Sat Jul 18":"2026-07-17","Sun Jul 19":"2026-07-18",
 };
 
 // Convert "HH:MM" 24h → "H:MMam/pm" ET
@@ -1241,16 +1245,12 @@ function renderDateSections(matches) {
 
   let html = '';
 
-  if (active.length > 0) {
-    html += renderDateGroups(groupByDate(active), true);
-  }
-
+  // ── Previous matches collapsible — shown FIRST so it's always easy to find ──
   if (past.length > 0) {
-    // Show most-recent date first inside the collapsible
-    const byDate = groupByDate(past);
+    const byDate  = groupByDate(past);
     const reversed = Object.fromEntries(Object.entries(byDate).reverse());
     html += `
-      <details class="past-section">
+      <details class="past-section" style="margin-top:0">
         <summary class="past-summary">
           <span class="past-toggle-icon">▶</span>
           Previous Matches
@@ -1261,6 +1261,11 @@ function renderDateSections(matches) {
           ${renderDateGroups(reversed, false)}
         </div>
       </details>`;
+  }
+
+  // ── Upcoming / live matches ──
+  if (active.length > 0) {
+    html += renderDateGroups(groupByDate(active), past.length === 0);
   }
 
   return html;
@@ -1323,7 +1328,8 @@ function renderTeamPills() {
     const next = nextMatchForTeam(code);
     let nextHtml = '';
     if (next) {
-      const shortDate = next.date.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) /, '');
+      // Use the corrected display label so the pill matches the section headers
+      const shortDate = formatSectionDate(next.date).slice(4); // "Fri Jun 12" → "Jun 12"
       nextHtml = `<div class="pill-next">
         <span class="pill-next-dot"></span>${shortDate} · ${to12h(next.time)}
       </div>`;
