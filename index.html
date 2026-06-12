@@ -417,6 +417,109 @@ footer {
   .phase-tab { padding: 6px 11px; font-size: 12px; }
 }
 
+/* ── SPURS MODE ───────────────────────────────────────── */
+.spurs-btn {
+  background: #132257 !important;
+  border-color: #132257 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.spurs-btn:hover {
+  background: #1c3278 !important;
+  border-color: #ADD8E6 !important;
+}
+.spurs-btn.active {
+  background: #0d1a42 !important;
+  border-color: #ADD8E6 !important;
+  box-shadow: 0 0 0 2px #ADD8E6;
+  color: #fff !important;
+}
+
+body.spurs-mode {
+  --bg:           #132257;
+  --surface:      #ffffff;
+  --surface2:     #eef2ff;
+  --border:       rgba(19,34,87,0.2);
+  --border2:      rgba(19,34,87,0.4);
+  --text:         #ffffff;
+  --muted:        rgba(255,255,255,0.65);
+  --accent:       #ADD8E6;
+  --accent2:      #c5e8f5;
+  --gold:         #ADD8E6;
+  --gold2:        #c5e8f5;
+  --clash-bg:     rgba(173,216,230,0.15);
+  --clash-border: rgba(173,216,230,0.5);
+}
+body.spurs-mode header {
+  background: linear-gradient(135deg, #0d1a42 0%, #091230 50%, #0d1a42 100%);
+  border-bottom-color: rgba(173,216,230,0.35);
+}
+body.spurs-mode .hero {
+  background: linear-gradient(135deg, #0d1a42 0%, #091230 100%);
+  border-bottom-color: rgba(173,216,230,0.2);
+}
+body.spurs-mode .hero-eyebrow { color: #ADD8E6; }
+body.spurs-mode .phase-tab.active {
+  background: #ffffff;
+  border-color: #ADD8E6;
+  color: #132257;
+}
+body.spurs-mode .phase-tab:hover { color: #ADD8E6; }
+body.spurs-mode .match-card {
+  background: #ffffff;
+  border-color: rgba(19,34,87,0.15);
+}
+body.spurs-mode .match-card:hover { border-color: #132257; }
+body.spurs-mode .match-card.clickable:hover { border-color: #132257; }
+body.spurs-mode .card-time  { color: #132257; }
+body.spurs-mode .card-venue { color: rgba(19,34,87,0.65); }
+body.spurs-mode .team-code  { color: #132257; }
+body.spurs-mode .score      { color: #132257; }
+body.spurs-mode .score-sep  { color: rgba(19,34,87,0.3); }
+body.spurs-mode .team-person { color: rgba(19,34,87,0.65); }
+body.spurs-mode .score.win  { color: #132257; font-weight: 900; }
+body.spurs-mode .team-code.winner { color: #132257; font-weight: 900; }
+body.spurs-mode .status-badge { color: #132257; }
+body.spurs-mode .card-group-tag { background: rgba(19,34,87,0.1); color: #132257; }
+body.spurs-mode .team-pill { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+body.spurs-mode .team-pill:hover { border-color: #ADD8E6; color: #ADD8E6; }
+body.spurs-mode .team-pill.selected { background: rgba(173,216,230,0.2); border-color: #ADD8E6; color: #ADD8E6; }
+body.spurs-mode .pill-btn { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
+body.spurs-mode .pill-btn:hover { border-color: #ADD8E6; color: #ADD8E6; }
+body.spurs-mode .pill-btn.active { background: #ADD8E6; border-color: #ADD8E6; color: #132257; }
+body.spurs-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
+body.spurs-mode .spurs-btn { background: #0d1a42 !important; border-color: #ADD8E6 !important; box-shadow: 0 0 0 2px #ADD8E6; }
+body.spurs-mode .past-section .past-summary { color: rgba(255,255,255,0.6); }
+body.spurs-mode footer { border-top-color: rgba(173,216,230,0.2); }
+body.spurs-mode .section-label { color: #ADD8E6; }
+body.spurs-mode .section-line { background: rgba(173,216,230,0.25); }
+body.spurs-mode .past-count { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+
+/* Spurs player badges */
+.spurs-player-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: rgba(19,34,87,0.85);
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+body.spurs-mode .spurs-player-badge {
+  background: #132257;
+  border: 1px solid rgba(19,34,87,0.2);
+  color: #fff;
+}
+.spurs-derby-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 800;
+  color: #132257;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+body.spurs-mode .spurs-derby-label { color: #132257; }
+body.spurs-mode .spurs-players { border-top-color: rgba(19,34,87,0.15); }
+
 /* ── ARSENAL MODE ─────────────────────────────────────── */
 /* Button */
 .arsenal-btn {
@@ -572,6 +675,7 @@ body.arsenal-mode .arsenal-players {
       <button class="pill-btn active" id="btn-all"    onclick="setViewMode('all')">All matches</button>
       <button class="pill-btn clash-btn" id="btn-family" onclick="setViewMode('family')">⚔ Family only</button>
       <button class="pill-btn arsenal-btn" id="btn-arsenal" onclick="toggleArsenalMode()">🔴 Arsenal Mode</button>
+      <button class="pill-btn spurs-btn"   id="btn-spurs"   onclick="toggleSpursMode()">⚪ Spurs Mode</button>
     </div>
   </div>
 </header>
@@ -770,6 +874,37 @@ const ARSENAL_MATCHES = {
   66: { players: { NOR: ["Martin Ødegaard"], FRA: ["William Saliba"] }, arsenalDerby: true },
 };
 
+// Spurs players per match — same structure as ARSENAL_MATCHES
+const SPURS_MATCHES = {
+  2:  { players: { CZE: ["Antonin Kinsky"] } },
+  7:  { players: { SCO: ["Andy Robertson"] } },
+  10: { players: { NED: ["Micky van de Ven"] } },
+  12: { players: { SWE: ["Lucas Bergvall"] } },
+  13: { players: { ESP: ["Pedro Porro"] } },
+  14: { players: { URU: ["Rodrigo Bentancur"] } },
+  17: { players: { SEN: ["Pape Matar Sarr"] } },
+  19: { players: { ARG: ["Cristian Romero"] } },
+  20: { players: { AUT: ["Kevin Danso"] } },
+  21: { players: { ENG: ["Djed Spence"], CRO: ["Luka Vuskovic"] }, spursDerby: true },
+  33: { players: { SEN: ["Pape Matar Sarr"] } },
+  35: { players: { NED: ["Micky van de Ven"], SWE: ["Lucas Bergvall"] }, spursDerby: true },
+  37: { players: { ESP: ["Pedro Porro"] } },
+  38: { players: { ARG: ["Cristian Romero"], AUT: ["Kevin Danso"] }, spursDerby: true },
+  41: { players: { ENG: ["Djed Spence"] } },
+  45: { players: { CRO: ["Luka Vuskovic"] } },
+  46: { players: { URU: ["Rodrigo Bentancur"] } },
+  50: { players: { SCO: ["Andy Robertson"] } },
+  53: { players: { CZE: ["Antonin Kinsky"] } },
+  55: { players: { NED: ["Micky van de Ven"] } },
+  57: { players: { SWE: ["Lucas Bergvall"] } },
+  61: { players: { ENG: ["Djed Spence"] } },
+  65: { players: { URU: ["Rodrigo Bentancur"], ESP: ["Pedro Porro"] }, spursDerby: true },
+  67: { players: { CRO: ["Luka Vuskovic"] } },
+  69: { players: { ARG: ["Cristian Romero"] } },
+  70: { players: { SEN: ["Pape Matar Sarr"] } },
+  71: { players: { AUT: ["Kevin Danso"] } },
+};
+
 function getFlag(code) {
   return FAMILY[code]?.flag || FLAGS[code] || "🏳️";
 }
@@ -867,6 +1002,7 @@ let viewMode        = 'all';
 let activePhase     = 'group';
 let selectedTeam    = null;
 let arsenalMode     = false;
+let spursMode       = false;
 
 // ═══════════════════════════════════════════════════════
 // PERSISTENCE
@@ -874,7 +1010,7 @@ let arsenalMode     = false;
 
 function saveState() {
   try {
-    localStorage.setItem('fwc26_state', JSON.stringify({ viewMode, activePhase, selectedTeam, arsenalMode }));
+    localStorage.setItem('fwc26_state', JSON.stringify({ viewMode, activePhase, selectedTeam, arsenalMode, spursMode }));
   } catch(e) {}
 }
 
@@ -885,6 +1021,7 @@ function loadState() {
     if (s.activePhase) activePhase = s.activePhase;
     if (s.selectedTeam !== undefined) selectedTeam = s.selectedTeam;
     if (s.arsenalMode !== undefined) arsenalMode = s.arsenalMode;
+    if (s.spursMode   !== undefined) spursMode   = s.spursMode;
   } catch(e) {}
 }
 
@@ -1236,6 +1373,7 @@ function isKnockoutPlaceholder(code) { return /^[W12L3]/.test(code); }
 
 function matchPassesFilter(m) {
   if (arsenalMode) return !!ARSENAL_MATCHES[m.id];
+  if (spursMode)   return !!SPURS_MATCHES[m.id];
   if (selectedTeam) return m.home === selectedTeam || m.away === selectedTeam;
   if (viewMode === 'family') return isFamilyTeam(m.home) || isFamilyTeam(m.away);
   return true;
@@ -1378,6 +1516,27 @@ function renderMatchCard(m) {
     arsenalFooter = `<div class="arsenal-players">${rows}${derbyLabel}</div>`;
   }
 
+  // Spurs player badges — only shown when Spurs Mode is active
+  const spursData = SPURS_MATCHES[m.id];
+  let spursFooter = '';
+  if (spursMode && spursData) {
+    const rows = [m.home, m.away]
+      .filter(code => spursData.players?.[code]?.length)
+      .map(code => {
+        const badges = spursData.players[code]
+          .map(p => `<span class="spurs-player-badge">⚪ ${p}</span>`)
+          .join('');
+        return `<div class="arsenal-team-row">
+          <span class="arsenal-team-flag">${getFlag(code)}</span>${badges}
+        </div>`;
+      })
+      .join('');
+    const derbyLabel = spursData.spursDerby
+      ? `<div class="spurs-derby-label">⚡ Spurs vs. Spurs!</div>`
+      : '';
+    spursFooter = `<div class="arsenal-players spurs-players">${rows}${derbyLabel}</div>`;
+  }
+
   const cardInner = `<div class="${classes}">
     <div class="card-top">
       <span class="card-time">${displayTime} ET</span>
@@ -1389,7 +1548,7 @@ function renderMatchCard(m) {
       ${renderScoreBlock(m.id)}
       ${renderTeamBlock(m.away, 'away', played && awayWin)}
     </div>
-    ${clashFooter}${arsenalFooter}
+    ${clashFooter}${arsenalFooter}${spursFooter}
   </div>`;
 
   // Wrap finished cards in a link; upcoming/live cards are plain divs
@@ -1538,10 +1697,34 @@ function renderTeamPills() {
 
 function toggleArsenalMode() {
   arsenalMode = !arsenalMode;
+  // Mutually exclusive with Spurs Mode
+  if (arsenalMode && spursMode) {
+    spursMode = false;
+    document.body.classList.remove('spurs-mode');
+    document.getElementById('btn-spurs').classList.remove('active');
+  }
   document.body.classList.toggle('arsenal-mode', arsenalMode);
   document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
-  // When entering Arsenal mode, clear team filter so it doesn't conflict
   if (arsenalMode) {
+    selectedTeam = null;
+    renderTeamPanel(null);
+    renderTeamPills();
+  }
+  saveState();
+  render();
+}
+
+function toggleSpursMode() {
+  spursMode = !spursMode;
+  // Mutually exclusive with Arsenal Mode
+  if (spursMode && arsenalMode) {
+    arsenalMode = false;
+    document.body.classList.remove('arsenal-mode');
+    document.getElementById('btn-arsenal').classList.remove('active');
+  }
+  document.body.classList.toggle('spurs-mode', spursMode);
+  document.getElementById('btn-spurs').classList.toggle('active', spursMode);
+  if (spursMode) {
     selectedTeam = null;
     renderTeamPanel(null);
     renderTeamPills();
@@ -1583,6 +1766,8 @@ function applyPersistedState() {
   document.getElementById('btn-family').classList.toggle('active', !selectedTeam && viewMode === 'family');
   document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
   document.body.classList.toggle('arsenal-mode', arsenalMode);
+  document.getElementById('btn-spurs').classList.toggle('active', spursMode);
+  document.body.classList.toggle('spurs-mode', spursMode);
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
