@@ -438,19 +438,19 @@ footer {
 
 /* Full-page theme when Arsenal Mode is on */
 body.arsenal-mode {
-  --bg:           #0d0001;
-  --surface:      #023474;
-  --surface2:     #012455;
-  --border:       rgba(198,168,75,0.25);
-  --border2:      rgba(198,168,75,0.45);
+  --bg:           #6A0C22;
+  --surface:      #C6A84B;
+  --surface2:     #b5973f;
+  --border:       rgba(2,52,116,0.35);
+  --border2:      rgba(2,52,116,0.6);
   --text:         #ffffff;
-  --muted:        rgba(255,255,255,0.58);
-  --accent:       #C6A84B;
-  --accent2:      #d4bb6a;
-  --gold:         #C6A84B;
-  --gold2:        #d4bb6a;
-  --clash-bg:     rgba(198,168,75,0.12);
-  --clash-border: rgba(198,168,75,0.55);
+  --muted:        rgba(255,255,255,0.65);
+  --accent:       #023474;
+  --accent2:      #1a4a8a;
+  --gold:         #023474;
+  --gold2:        #1a4a8a;
+  --clash-bg:     rgba(2,52,116,0.15);
+  --clash-border: rgba(2,52,116,0.55);
 }
 body.arsenal-mode header {
   background: linear-gradient(135deg, #EF0107 0%, #a80004 50%, #cc0005 100%);
@@ -462,40 +462,50 @@ body.arsenal-mode .hero {
 }
 body.arsenal-mode .hero-eyebrow { color: #C6A84B; }
 body.arsenal-mode .phase-tab.active {
-  background: #023474;
-  border-color: #C6A84B;
+  background: #C6A84B;
+  border-color: #023474;
   color: #fff;
 }
 body.arsenal-mode .phase-tab:hover { color: #C6A84B; }
 body.arsenal-mode .match-card {
-  background: #023474;
-  border-color: rgba(198,168,75,0.2);
+  background: #C6A84B;
+  border-color: rgba(2,52,116,0.3);
+  color: #fff;
 }
-body.arsenal-mode .match-card:hover { border-color: #C6A84B; }
-body.arsenal-mode .match-card.clickable:hover { border-color: #C6A84B; }
+body.arsenal-mode .match-card:hover { border-color: #023474; }
+body.arsenal-mode .match-card.clickable:hover { border-color: #023474; }
 body.arsenal-mode .card-group-tag {
-  background: rgba(198,168,75,0.18);
-  color: #C6A84B;
+  background: rgba(2,52,116,0.2);
+  color: #023474;
 }
 body.arsenal-mode .team-pill {
-  background: #023474;
-  border-color: rgba(198,168,75,0.25);
+  background: #C6A84B;
+  border-color: rgba(2,52,116,0.3);
 }
-body.arsenal-mode .team-pill:hover { border-color: #C6A84B; color: #C6A84B; }
+body.arsenal-mode .team-pill:hover { border-color: #023474; color: #023474; }
 body.arsenal-mode .team-pill.selected {
-  background: rgba(198,168,75,0.2);
-  border-color: #C6A84B;
-  color: #C6A84B;
+  background: rgba(2,52,116,0.2);
+  border-color: #023474;
+  color: #023474;
 }
-body.arsenal-mode .pill-btn { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
+body.arsenal-mode .pill-btn { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
 body.arsenal-mode .pill-btn:hover { border-color: #C6A84B; color: #C6A84B; }
-body.arsenal-mode .pill-btn.active { background: #C6A84B; border-color: #C6A84B; color: #0d0001; }
+body.arsenal-mode .pill-btn.active { background: #C6A84B; border-color: #C6A84B; color: #fff; }
 body.arsenal-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
 body.arsenal-mode .arsenal-btn.active { background: #b00005 !important; border-color: #C6A84B !important; box-shadow: 0 0 0 2px #C6A84B; }
-body.arsenal-mode .past-section .past-summary { color: rgba(255,255,255,0.55); }
-body.arsenal-mode footer { border-top-color: rgba(198,168,75,0.2); }
-body.arsenal-mode .section-label { color: #C6A84B; }
-body.arsenal-mode .section-line { background: rgba(198,168,75,0.2); }
+body.arsenal-mode .past-section .past-summary { color: rgba(255,255,255,0.65); }
+body.arsenal-mode footer { border-top-color: rgba(2,52,116,0.25); }
+body.arsenal-mode .section-label { color: #023474; }
+body.arsenal-mode .section-line { background: rgba(2,52,116,0.25); }
+body.arsenal-mode .card-time { color: #fff; }
+body.arsenal-mode .card-venue { color: rgba(255,255,255,0.75); }
+body.arsenal-mode .team-code { color: #fff; }
+body.arsenal-mode .score { color: #fff; }
+body.arsenal-mode .score-sep { color: rgba(255,255,255,0.4); }
+body.arsenal-mode .muted,
+body.arsenal-mode .team-person { color: rgba(255,255,255,0.7); }
+body.arsenal-mode .score.win { color: #023474; }
+body.arsenal-mode .team-code.winner { color: #023474; }
 
 /* Arsenal player badges on cards */
 .arsenal-players {
@@ -523,8 +533,9 @@ body.arsenal-mode .section-line { background: rgba(198,168,75,0.2); }
   letter-spacing: 0.02em;
 }
 body.arsenal-mode .arsenal-player-badge {
-  background: #EF0107;
-  border: 1px solid rgba(255,255,255,0.2);
+  background: #023474;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
 }
 .arsenal-derby-label {
   display: inline-flex; align-items: center; gap: 4px;
@@ -533,7 +544,10 @@ body.arsenal-mode .arsenal-player-badge {
   letter-spacing: 0.03em;
   margin-top: 2px;
 }
-body.arsenal-mode .arsenal-derby-label { color: #d4bb6a; }
+body.arsenal-mode .arsenal-derby-label { color: #EF0107; font-weight: 800; }
+body.arsenal-mode .arsenal-players {
+  border-top-color: rgba(2,52,116,0.25);
+}
 </style>
 </head>
 <body>
