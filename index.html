@@ -36,13 +36,56 @@ body {
 
 /* HEADER */
 header {
-  background: linear-gradient(135deg, #0d1b3e 0%, #1a0a2e 50%, #0a1628 100%);
-  border-bottom: 1px solid var(--border2);
+  background: #cc0000; /* fallback while tunnel loads */
+  border-bottom: 1px solid rgba(255,255,255,0.15);
   padding: 0 1.5rem;
   position: sticky;
   top: 0;
   z-index: 100;
+  overflow: hidden;
 }
+
+/* ── CONCENTRIC RECTANGLE TUNNEL ── */
+/* One absolutely-positioned div fills the header with layered inset box-shadows.
+   Each shadow ring is 8 px wide. Order: first listed = outermost (closest to edge). */
+.header-tunnel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* Innermost fill — Red */
+  background: #dd0000;
+  box-shadow:
+    /* outermost → edge */
+    inset 0 0 0  8px #004400,   /* Dark Green  */
+    inset 0 0 0 16px #00bbbb,   /* Cyan        */
+    inset 0 0 0 24px #007777,   /* Teal        */
+    inset 0 0 0 32px #229922,   /* Green       */
+    inset 0 0 0 40px #ddbb00,   /* Yellow      */
+    inset 0 0 0 48px #ee7700,   /* Orange      */
+    inset 0 0 0 56px #dd88dd,   /* Lavender    */
+    inset 0 0 0 64px #880099,   /* Purple      */
+    inset 0 0 0 72px #990000,   /* Dark Red    */
+    inset 0 0 0 4000px #dd0000; /* Red — fills center */
+  /* Slow hue-rotation gives the "rotating rainbow / psychedelic" feel */
+  animation: tunnel-hue 30s linear infinite;
+}
+/* Subtle dark veil so text stays legible */
+.header-tunnel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.22);
+  pointer-events: none;
+}
+@keyframes tunnel-hue {
+  from { filter: hue-rotate(0deg) saturate(1.2); }
+  to   { filter: hue-rotate(360deg) saturate(1.2); }
+}
+
+/* Hide tunnel in Arsenal / Spurs modes — their own header gradients take over */
+body.arsenal-mode .header-tunnel,
+body.spurs-mode   .header-tunnel { display: none; }
+
 .header-inner {
   max-width: 1200px;
   margin: 0 auto;
@@ -52,21 +95,26 @@ header {
   gap: 1rem;
   padding: 0.85rem 0;
   flex-wrap: wrap;
+  /* Must sit above the tunnel layer */
+  position: relative;
+  z-index: 1;
 }
 .header-brand { display: flex; align-items: center; gap: 10px; }
-.brand-trophy { font-size: 22px; }
+.brand-trophy { font-size: 22px; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.9)); }
 .brand-text h1 {
   font-size: 17px; font-weight: 700; letter-spacing: -0.02em;
-  color: var(--text); white-space: nowrap;
+  color: #fff; white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.95), 0 0 16px rgba(0,0,0,0.7);
 }
 .brand-text p {
-  font-size: 11px; color: var(--muted);
+  font-size: 11px; color: rgba(255,255,255,0.82);
   letter-spacing: 0.06em; text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 .header-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .pill-btn {
   padding: 6px 14px; border-radius: 999px;
-  border: 1px solid var(--border2); background: transparent;
+  border: 1px solid var(--border2); background: rgba(0,0,0,0.35);
   color: var(--muted); font-size: 13px; font-weight: 500;
   cursor: pointer; transition: all 0.18s; white-space: nowrap;
 }
@@ -667,6 +715,7 @@ body.arsenal-mode .arsenal-players {
 </div>
 
 <header>
+  <div class="header-tunnel" aria-hidden="true"></div>
   <div class="header-inner">
     <div class="header-brand">
       <span class="brand-trophy">🏆</span>
