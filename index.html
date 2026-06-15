@@ -1356,6 +1356,19 @@ function parseESPN(events) {
       clock = 'HT';
     }
 
+    // Convert ESPN's UTC kickoff date → ET 12-hour time string (e.g. "1:00pm")
+    // FWC 2026 runs entirely during EDT (UTC-4), so a fixed -4 h offset is correct.
+    let espnTime = null;
+    if (ev.date) {
+      const d = new Date(ev.date);
+      let h = d.getUTCHours() - 4; // UTC → EDT
+      if (h < 0) h += 24;
+      const mm   = String(d.getUTCMinutes()).padStart(2, '0');
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const h12  = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      espnTime = `${h12}:${mm}${ampm}`;
+    }
+
     scores[match.id] = {
       home:    flipped ? aScore : hScore,
       away:    flipped ? hScore : aScore,
@@ -1363,7 +1376,8 @@ function parseESPN(events) {
       awayWin: flipped ? homeComp.winner : awayComp.winner,
       status,
       clock,
-      espnId:  ev.id, // stored for ALL statuses so upcoming matches can be linked too
+      espnId:  ev.id,
+      espnTime,            // authoritative kickoff time straight from ESPN
     };
   });
 }
@@ -1426,7 +1440,7 @@ function deriveMatchState(m) {
     played:      isMatchPast(m),   // robust: FT flag OR 3h heuristic
     live:        s?.status === 'live' || s?.status === 'ht',
     clash:       isClash(m),
-    displayTime: to12h(m.time),
+    displayTime: s?.espnTime || to12h(m.time),
   };
 }
 
