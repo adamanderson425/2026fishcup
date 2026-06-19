@@ -417,6 +417,114 @@ footer {
   .phase-tab { padding: 6px 11px; font-size: 12px; }
 }
 
+/* ── CHELSEA MODE ─────────────────────────────────────── */
+.chelsea-btn {
+  background: #034694 !important;
+  border-color: #034694 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.chelsea-btn:hover {
+  background: #0557b8 !important;
+  border-color: #C8A84B !important;
+}
+.chelsea-btn.active {
+  background: #023070 !important;
+  border-color: #C8A84B !important;
+  box-shadow: 0 0 0 2px #C8A84B;
+  color: #fff !important;
+}
+
+body.chelsea-mode {
+  --bg:           #034694;
+  --surface:      #ffffff;
+  --surface2:     #eef3ff;
+  --border:       rgba(3,70,148,0.18);
+  --border2:      rgba(3,70,148,0.35);
+  --text:         #ffffff;
+  --muted:        rgba(255,255,255,0.65);
+  --accent:       #C8A84B;
+  --accent2:      #d9bc6a;
+  --gold:         #C8A84B;
+  --gold2:        #d9bc6a;
+  --clash-bg:     rgba(200,168,75,0.12);
+  --clash-border: rgba(200,168,75,0.5);
+}
+body.chelsea-mode header {
+  background: linear-gradient(135deg, #022f6b 0%, #011e44 50%, #022f6b 100%);
+  border-bottom-color: rgba(200,168,75,0.35);
+}
+body.chelsea-mode .hero {
+  background: linear-gradient(135deg, #022f6b 0%, #011e44 100%);
+  border-bottom-color: rgba(200,168,75,0.2);
+}
+body.chelsea-mode .hero-eyebrow { color: #C8A84B; }
+body.chelsea-mode .phase-tab {
+  background: rgba(255,255,255,0.88);
+  border-color: rgba(3,70,148,0.2);
+  color: #034694;
+}
+body.chelsea-mode .phase-tab.active {
+  background: #ffffff;
+  border-color: #C8A84B;
+  color: #034694;
+}
+body.chelsea-mode .phase-tab:hover { background: rgba(255,255,255,1); color: #034694; }
+body.chelsea-mode .match-card {
+  background: #ffffff;
+  border-color: rgba(3,70,148,0.15);
+}
+body.chelsea-mode .match-card:hover { border-color: #034694; }
+body.chelsea-mode .match-card.clickable:hover { border-color: #034694; }
+body.chelsea-mode .card-time   { color: #034694; }
+body.chelsea-mode .card-venue  { color: rgba(3,70,148,0.65); }
+body.chelsea-mode .team-code   { color: #034694; }
+body.chelsea-mode .score       { color: #034694; }
+body.chelsea-mode .score-sep   { color: rgba(3,70,148,0.3); }
+body.chelsea-mode .team-person { color: rgba(3,70,148,0.65); }
+body.chelsea-mode .score.win   { color: #034694; font-weight: 900; }
+body.chelsea-mode .team-code.winner { color: #034694; font-weight: 900; }
+body.chelsea-mode .status-badge { color: #034694; }
+body.chelsea-mode .card-group-tag { background: rgba(3,70,148,0.1); color: #034694; }
+body.chelsea-mode .team-pill { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+body.chelsea-mode .team-pill:hover { border-color: #C8A84B; color: #C8A84B; }
+body.chelsea-mode .team-pill.selected { background: rgba(200,168,75,0.2); border-color: #C8A84B; color: #C8A84B; }
+body.chelsea-mode .pill-btn { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
+body.chelsea-mode .pill-btn:hover { border-color: #C8A84B; color: #C8A84B; }
+body.chelsea-mode .pill-btn.active { background: #C8A84B; border-color: #C8A84B; color: #034694; }
+body.chelsea-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
+body.chelsea-mode .spurs-btn   { background: #132257 !important; border-color: #132257 !important; color: #fff !important; }
+body.chelsea-mode .chelsea-btn { background: #023070 !important; border-color: #C8A84B !important; box-shadow: 0 0 0 2px #C8A84B; }
+body.chelsea-mode .past-section .past-summary { color: rgba(255,255,255,0.6); }
+body.chelsea-mode .past-count { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+body.chelsea-mode footer { border-top-color: rgba(200,168,75,0.2); }
+body.chelsea-mode .section-label { color: #C8A84B; }
+body.chelsea-mode .section-line { background: rgba(200,168,75,0.25); }
+
+/* Chelsea player badges */
+.chelsea-player-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: #034694;
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 999px;
+  white-space: nowrap; letter-spacing: 0.02em;
+}
+body.chelsea-mode .chelsea-player-badge {
+  background: #034694;
+  border: 1px solid rgba(3,70,148,0.2);
+  color: #fff;
+}
+.chelsea-derby-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 800;
+  color: #034694;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+body.chelsea-mode .chelsea-derby-label { color: #034694; }
+body.chelsea-mode .chelsea-players { border-top-color: rgba(3,70,148,0.15); }
+
 /* ── SPURS MODE ───────────────────────────────────────── */
 .spurs-btn {
   background: #132257 !important;
@@ -680,6 +788,7 @@ body.arsenal-mode .arsenal-players {
       <button class="pill-btn clash-btn" id="btn-family" onclick="setViewMode('family')">⚔ Family only</button>
       <button class="pill-btn arsenal-btn" id="btn-arsenal" onclick="toggleArsenalMode()">🏆 Arsenal Mode</button>
       <button class="pill-btn spurs-btn"   id="btn-spurs"   onclick="toggleSpursMode()">💩 Spurs Mode</button>
+      <button class="pill-btn chelsea-btn" id="btn-chelsea" onclick="toggleChelseaMode()">⚽ Chelsea Mode</button>
     </div>
   </div>
 </header>
@@ -911,6 +1020,35 @@ const SPURS_MATCHES = {
   71: { players: { AUT: ["Kevin Danso"] } },
 };
 
+// Chelsea players per match — same structure as ARSENAL_MATCHES / SPURS_MATCHES
+const CHELSEA_MATCHES = {
+  10: { players: { NED: ["Jorrel Hato"] } },
+  11: { players: { ECU: ["Moisés Caicedo", "Kendry Páez"] } },
+  13: { players: { ESP: ["Marc Cucurella"] } },
+  16: { players: { BEL: ["Mike Penders"] } },
+  17: { players: { FRA: ["Malo Gusto"], SEN: ["Nicolas Jackson", "Mamadou Sarr"] }, chelseaDerby: true },
+  19: { players: { ARG: ["Enzo Fernández"] } },
+  21: { players: { ENG: ["Reece James"] } },
+  23: { players: { POR: ["Pedro Neto"] } },
+  35: { players: { NED: ["Jorrel Hato"] } },
+  36: { players: { ECU: ["Moisés Caicedo", "Kendry Páez"] } },
+  37: { players: { ESP: ["Marc Cucurella"] } },
+  38: { players: { ARG: ["Enzo Fernández"] } },
+  41: { players: { ENG: ["Reece James"] } },
+  42: { players: { FRA: ["Malo Gusto"] } },
+  43: { players: { BEL: ["Mike Penders"] } },
+  49: { players: { ECU: ["Moisés Caicedo", "Kendry Páez"] } },
+  54: { players: { POR: ["Pedro Neto"] } },
+  55: { players: { NED: ["Jorrel Hato"] } },
+  60: { players: { BEL: ["Mike Penders"] } },
+  61: { players: { ENG: ["Reece James"] } },
+  65: { players: { ESP: ["Marc Cucurella"] } },
+  66: { players: { FRA: ["Malo Gusto"] } },
+  68: { players: { POR: ["Pedro Neto"] } },
+  69: { players: { ARG: ["Enzo Fernández"] } },
+  70: { players: { SEN: ["Nicolas Jackson", "Mamadou Sarr"] } },
+};
+
 function getFlag(code) {
   return FAMILY[code]?.flag || FLAGS[code] || "🏳️";
 }
@@ -1009,6 +1147,7 @@ let activePhase     = 'group';
 let selectedTeam    = null;
 let arsenalMode     = false;
 let spursMode       = false;
+let chelseaMode     = false;
 
 // ═══════════════════════════════════════════════════════
 // PERSISTENCE
@@ -1016,7 +1155,7 @@ let spursMode       = false;
 
 function saveState() {
   try {
-    localStorage.setItem('fwc26_state', JSON.stringify({ viewMode, activePhase, selectedTeam, arsenalMode, spursMode }));
+    localStorage.setItem('fwc26_state', JSON.stringify({ viewMode, activePhase, selectedTeam, arsenalMode, spursMode, chelseaMode }));
   } catch(e) {}
 }
 
@@ -1027,7 +1166,8 @@ function loadState() {
     if (s.activePhase) activePhase = s.activePhase;
     if (s.selectedTeam !== undefined) selectedTeam = s.selectedTeam;
     if (s.arsenalMode !== undefined) arsenalMode = s.arsenalMode;
-    if (s.spursMode   !== undefined) spursMode   = s.spursMode;
+    if (s.spursMode     !== undefined) spursMode     = s.spursMode;
+    if (s.chelseaMode   !== undefined) chelseaMode   = s.chelseaMode;
   } catch(e) {}
 }
 
@@ -1392,8 +1532,9 @@ function isFamilyTeam(code) { return !!FAMILY[code]; }
 function isKnockoutPlaceholder(code) { return /^[W12L3]/.test(code); }
 
 function matchPassesFilter(m) {
-  if (arsenalMode) return !!ARSENAL_MATCHES[m.id];
-  if (spursMode)   return !!SPURS_MATCHES[m.id];
+  if (arsenalMode)  return !!ARSENAL_MATCHES[m.id];
+  if (spursMode)    return !!SPURS_MATCHES[m.id];
+  if (chelseaMode)  return !!CHELSEA_MATCHES[m.id];
   if (selectedTeam) return m.home === selectedTeam || m.away === selectedTeam;
   if (viewMode === 'family') return isFamilyTeam(m.home) || isFamilyTeam(m.away);
   return true;
@@ -1557,6 +1698,27 @@ function renderMatchCard(m) {
     spursFooter = `<div class="arsenal-players spurs-players">${rows}${derbyLabel}</div>`;
   }
 
+  // Chelsea player badges — only shown when Chelsea Mode is active
+  const chelseaData = CHELSEA_MATCHES[m.id];
+  let chelseaFooter = '';
+  if (chelseaMode && chelseaData) {
+    const rows = [m.home, m.away]
+      .filter(code => chelseaData.players?.[code]?.length)
+      .map(code => {
+        const badges = chelseaData.players[code]
+          .map(p => `<span class="chelsea-player-badge">⚽ ${p}</span>`)
+          .join('');
+        return `<div class="arsenal-team-row">
+          <span class="arsenal-team-flag">${getFlag(code)}</span>${badges}
+        </div>`;
+      })
+      .join('');
+    const derbyLabel = chelseaData.chelseaDerby
+      ? `<div class="chelsea-derby-label">⚡ Chelsea vs. Chelsea!</div>`
+      : '';
+    chelseaFooter = `<div class="arsenal-players chelsea-players">${rows}${derbyLabel}</div>`;
+  }
+
   const cardInner = `<div class="${classes}">
     <div class="card-top">
       <span class="card-time">${displayTime} ET</span>
@@ -1568,7 +1730,7 @@ function renderMatchCard(m) {
       ${renderScoreBlock(m.id)}
       ${renderTeamBlock(m.away, 'away', played && awayWin)}
     </div>
-    ${clashFooter}${arsenalFooter}${spursFooter}
+    ${clashFooter}${arsenalFooter}${spursFooter}${chelseaFooter}
   </div>`;
 
   // Wrap finished cards in a link; upcoming/live cards are plain divs
@@ -1717,38 +1879,39 @@ function renderTeamPills() {
 
 function toggleArsenalMode() {
   arsenalMode = !arsenalMode;
-  // Mutually exclusive with Spurs Mode
-  if (arsenalMode && spursMode) {
-    spursMode = false;
-    document.body.classList.remove('spurs-mode');
-    document.getElementById('btn-spurs').classList.remove('active');
+  if (arsenalMode) {
+    if (spursMode)   { spursMode   = false; document.body.classList.remove('spurs-mode');   document.getElementById('btn-spurs').classList.remove('active'); }
+    if (chelseaMode) { chelseaMode = false; document.body.classList.remove('chelsea-mode'); document.getElementById('btn-chelsea').classList.remove('active'); }
   }
   document.body.classList.toggle('arsenal-mode', arsenalMode);
   document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
-  if (arsenalMode) {
-    selectedTeam = null;
-    renderTeamPanel(null);
-    renderTeamPills();
-  }
+  if (arsenalMode) { selectedTeam = null; renderTeamPanel(null); renderTeamPills(); }
   saveState();
   render();
 }
 
 function toggleSpursMode() {
   spursMode = !spursMode;
-  // Mutually exclusive with Arsenal Mode
-  if (spursMode && arsenalMode) {
-    arsenalMode = false;
-    document.body.classList.remove('arsenal-mode');
-    document.getElementById('btn-arsenal').classList.remove('active');
+  if (spursMode) {
+    if (arsenalMode) { arsenalMode = false; document.body.classList.remove('arsenal-mode'); document.getElementById('btn-arsenal').classList.remove('active'); }
+    if (chelseaMode) { chelseaMode = false; document.body.classList.remove('chelsea-mode'); document.getElementById('btn-chelsea').classList.remove('active'); }
   }
   document.body.classList.toggle('spurs-mode', spursMode);
   document.getElementById('btn-spurs').classList.toggle('active', spursMode);
-  if (spursMode) {
-    selectedTeam = null;
-    renderTeamPanel(null);
-    renderTeamPills();
+  if (spursMode) { selectedTeam = null; renderTeamPanel(null); renderTeamPills(); }
+  saveState();
+  render();
+}
+
+function toggleChelseaMode() {
+  chelseaMode = !chelseaMode;
+  if (chelseaMode) {
+    if (arsenalMode) { arsenalMode = false; document.body.classList.remove('arsenal-mode'); document.getElementById('btn-arsenal').classList.remove('active'); }
+    if (spursMode)   { spursMode   = false; document.body.classList.remove('spurs-mode');   document.getElementById('btn-spurs').classList.remove('active'); }
   }
+  document.body.classList.toggle('chelsea-mode', chelseaMode);
+  document.getElementById('btn-chelsea').classList.toggle('active', chelseaMode);
+  if (chelseaMode) { selectedTeam = null; renderTeamPanel(null); renderTeamPills(); }
   saveState();
   render();
 }
@@ -1788,6 +1951,8 @@ function applyPersistedState() {
   document.body.classList.toggle('arsenal-mode', arsenalMode);
   document.getElementById('btn-spurs').classList.toggle('active', spursMode);
   document.body.classList.toggle('spurs-mode', spursMode);
+  document.getElementById('btn-chelsea').classList.toggle('active', chelseaMode);
+  document.body.classList.toggle('chelsea-mode', chelseaMode);
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
