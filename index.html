@@ -1904,24 +1904,31 @@ function startPillScroll() {
   wrap.addEventListener('touchstart',  () => { pillScrollPaused = true; }, { passive: true });
   wrap.addEventListener('touchend',    () => { setTimeout(() => { pillScrollPaused = false; }, 800); }, { passive: true });
 
-  // Drag-to-scroll
-  let isDragging = false, dragStartX = 0, dragStartScroll = 0;
+  // Drag-to-scroll — only activate after 6px movement so clicks still fire
+  let isDragging = false, didDrag = false, dragStartX = 0, dragStartScroll = 0;
   wrap.addEventListener('pointerdown', e => {
     isDragging = true;
+    didDrag = false;
     dragStartX = e.clientX;
     dragStartScroll = wrap.scrollLeft;
     pillScrollPaused = true;
-    wrap.setPointerCapture(e.pointerId);
   });
   wrap.addEventListener('pointermove', e => {
     if (!isDragging) return;
-    wrap.scrollLeft = dragStartScroll - (e.clientX - dragStartX);
+    const dx = e.clientX - dragStartX;
+    if (!didDrag && Math.abs(dx) < 6) return; // threshold before drag begins
+    if (!didDrag) { didDrag = true; wrap.setPointerCapture(e.pointerId); }
+    wrap.scrollLeft = dragStartScroll - dx;
     pillScrollPos = wrap.scrollLeft;
   });
   wrap.addEventListener('pointerup', () => {
     isDragging = false;
     setTimeout(() => { pillScrollPaused = false; }, 600);
   });
+  // Swallow the click that follows a drag so pills don't toggle accidentally
+  wrap.addEventListener('click', e => {
+    if (didDrag) { e.stopPropagation(); didDrag = false; }
+  }, true);
 
   // rAF auto-scroll loop
   cancelAnimationFrame(pillScrollRAF);
