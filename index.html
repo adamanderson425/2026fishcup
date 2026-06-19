@@ -2332,7 +2332,6 @@ function toggleTeam(code) {
   saveState();
   renderHero(selectedTeam);
   renderTeamPills();
-  if (selectedTeam) scrollToSelectedPill(selectedTeam);
   renderTeamPanel(selectedTeam);
   render();
 }
@@ -2368,7 +2367,6 @@ function applyPersistedState() {
   document.getElementById('loading-overlay').style.display = 'none';
   applyPersistedState();
   renderTeamPills();
-  if (selectedTeam) scrollToSelectedPill(selectedTeam);
   renderTeamPanel(selectedTeam);
   render();
   startPillScroll();
