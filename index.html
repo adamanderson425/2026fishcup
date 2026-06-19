@@ -894,14 +894,21 @@ body.arsenal-mode .arsenal-players {
   .update-bar { padding: 4px 0 10px; }
   .refresh-btn { min-height: 44px; padding: 8px 14px; }
 
-  /* Match grid — single column */
-  .match-grid { grid-template-columns: 1fr; gap: 8px; }
-
-  /* Match cards */
-  .match-card { padding: 12px 14px; }
+  /* Match grid — single full-width column */
+  .match-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 8px;
+  }
+  .match-card {
+    width: 100%;
+    padding: 12px 14px;
+    box-sizing: border-box;
+  }
 
   /* Team panel: float above matches on mobile */
   #content-layout { flex-direction: column; gap: 14px; }
+  #matches-col { width: 100%; min-width: 0; }
   #team-panel { width: 100%; position: static; max-height: none; order: -1; }
   #global-news-panel { display: none; }
 
