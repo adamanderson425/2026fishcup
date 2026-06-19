@@ -812,6 +812,9 @@ body.arsenal-mode .arsenal-players {
 /* "No matches today" note — hidden on desktop */
 .mobile-no-today { display: none; }
 
+/* Mobile team badge — hidden on desktop */
+#mobile-team-badge { display: none; }
+
 @media (max-width: 768px) {
 
   /* Hide the pill carousel, show the dropdown instead */
@@ -911,6 +914,27 @@ body.arsenal-mode .arsenal-players {
   #matches-col { width: 100%; min-width: 0; }
   #team-panel { width: 100%; position: static; max-height: none; }
   #global-news-panel { display: none; }
+
+  /* Mobile team badge — visible above matches when a team is selected */
+  #mobile-team-badge {
+    display: block; /* JS controls visibility via innerHTML / display:none */
+    margin-bottom: 14px;
+  }
+  .mobile-badge-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #0d1b3e, #1a0a2e);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .mobile-badge-flag  { font-size: 32px; line-height: 1; flex-shrink: 0; }
+  .mobile-badge-name  { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .mobile-badge-picker { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+
+  /* Hide phase tabs when a team is selected on mobile */
+  body.team-selected .phase-tabs { display: none; }
 
   /* "No matches today" note */
   .mobile-no-today {
@@ -1028,6 +1052,7 @@ body.arsenal-mode .arsenal-players {
 
   <div id="content-layout">
     <div id="matches-col">
+      <div id="mobile-team-badge"></div>
       <div id="group-view"></div>
       <div id="knockout-view" style="display:none"></div>
     </div>
@@ -1722,16 +1747,45 @@ function setGlobalNewsVisible(visible) {
   if (gp) gp.style.display = visible ? '' : 'none';
 }
 
+function updateMobileTeamBadge(code) {
+  const badge = document.getElementById('mobile-team-badge');
+  if (!badge) return;
+  if (!code || !FAMILY[code]) {
+    badge.innerHTML = '';
+    badge.style.display = 'none';
+    document.body.classList.remove('team-selected');
+    return;
+  }
+  const f = FAMILY[code];
+  badge.style.display = '';
+  badge.innerHTML = `
+    <div class="mobile-badge-inner">
+      <span class="mobile-badge-flag">${f.flag}</span>
+      <div>
+        <div class="mobile-badge-name">${f.name}</div>
+        <div class="mobile-badge-picker">🏆 ${f.person}'s pick</div>
+      </div>
+    </div>`;
+  document.body.classList.add('team-selected');
+}
+
 function renderTeamPanel(code) {
   const panel = document.getElementById('team-panel');
   if (!code) {
     panel.style.display = 'none';
     setGlobalNewsVisible(true);
+    updateMobileTeamBadge(null);
     return;
   }
 
   const f = FAMILY[code];
-  if (!f) { panel.style.display = 'none'; setGlobalNewsVisible(true); return; }
+  if (!f) {
+    panel.style.display = 'none';
+    setGlobalNewsVisible(true);
+    updateMobileTeamBadge(null);
+    return;
+  }
+  updateMobileTeamBadge(code);
 
   const players = KEY_PLAYERS[code] || [];
 
@@ -2198,22 +2252,27 @@ function renderDateSections(matches) {
 
   let html = '';
 
-  // ── Previous matches collapsible — shown FIRST so it's always easy to find ──
+  // ── Previous matches: collapsible normally; inline on team pages ──
   if (past.length > 0) {
-    const byDate  = groupByDate(past);
-    const reversed = Object.fromEntries(Object.entries(byDate).reverse());
-    html += `
-      <details class="past-section" style="margin-top:0">
-        <summary class="past-summary">
-          <span class="past-toggle-icon">▶</span>
-          Previous Matches
-          <span class="past-count">${past.length}</span>
-          <span class="past-summary-line"></span>
-        </summary>
-        <div class="past-grid-wrapper">
-          ${renderDateGroups(reversed, false)}
-        </div>
-      </details>`;
+    if (selectedTeam) {
+      // Show past results inline in chronological order on team pages
+      html += renderDateGroups(groupByDate(past), true);
+    } else {
+      const byDate   = groupByDate(past);
+      const reversed = Object.fromEntries(Object.entries(byDate).reverse());
+      html += `
+        <details class="past-section" style="margin-top:0">
+          <summary class="past-summary">
+            <span class="past-toggle-icon">▶</span>
+            Previous Matches
+            <span class="past-count">${past.length}</span>
+            <span class="past-summary-line"></span>
+          </summary>
+          <div class="past-grid-wrapper">
+            ${renderDateGroups(reversed, false)}
+          </div>
+        </details>`;
+    }
   }
 
   // ── Upcoming / live matches — split into today vs future for mobile ──
