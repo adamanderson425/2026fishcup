@@ -74,6 +74,51 @@ header {
 .pill-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .pill-btn.clash-btn.active { background: var(--gold); border-color: var(--gold); color: #0a0f1e; }
 
+/* CLUB MODE BUTTON + DROPDOWN */
+.club-mode-wrap { position: relative; }
+.club-btn {
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.18s; white-space: nowrap;
+}
+.club-btn:hover { border-color: var(--accent); color: var(--accent2); }
+.club-btn.arsenal-active { background: #EF0107 !important; border-color: #C6A84B !important; box-shadow: 0 0 0 2px #C6A84B; color: #fff !important; font-weight: 600; }
+.club-btn.spurs-active   { background: #132257 !important; border-color: #ADD8E6 !important; box-shadow: 0 0 0 2px #ADD8E6; color: #fff !important; font-weight: 600; }
+.club-btn.chelsea-active { background: #034694 !important; border-color: #C8A84B !important; box-shadow: 0 0 0 2px #C8A84B; color: #fff !important; font-weight: 600; }
+.club-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1a2436;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 500;
+  min-width: 170px;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+}
+.club-dropdown.open { display: flex; }
+.club-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 13px; border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer; font-size: 13px; font-weight: 600;
+  transition: all 0.15s; text-align: left; width: 100%;
+}
+.club-option.arsenal-option { background: #EF0107; color: #fff; }
+.club-option.arsenal-option:hover { background: #c40006; }
+.club-option.arsenal-option.active { border-color: #C6A84B; box-shadow: 0 0 0 2px rgba(198,168,75,0.4); }
+.club-option.spurs-option   { background: #132257; color: #fff; }
+.club-option.spurs-option:hover { background: #0d1a42; }
+.club-option.spurs-option.active { border-color: #ADD8E6; box-shadow: 0 0 0 2px rgba(173,216,230,0.4); }
+.club-option.chelsea-option { background: #034694; color: #fff; }
+.club-option.chelsea-option:hover { background: #023070; }
+.club-option.chelsea-option.active { border-color: #C8A84B; box-shadow: 0 0 0 2px rgba(200,168,75,0.4); }
+
 /* HERO */
 .hero {
   background: linear-gradient(135deg, #0d1b3e 0%, #1a0a2e 100%);
@@ -82,24 +127,34 @@ header {
   border-bottom: 1px solid var(--border);
 }
 .hero-eyebrow {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 10px;
 }
 .hero-title {
-  font-size: clamp(22px, 5vw, 34px); font-weight: 800;
-  letter-spacing: -0.03em; color: var(--text); margin-bottom: 4px;
+  font-size: clamp(40px, 10vw, 88px); font-weight: 900;
+  letter-spacing: -0.04em; line-height: 1;
+  color: var(--text); margin-bottom: 1.25rem;
 }
-.hero-sub { font-size: 14px; color: var(--muted); margin-bottom: 1.25rem; }
 
-/* TEAM FILTER PILLS */
+/* TEAM FILTER PILL SCROLLER */
 .team-filter-wrap {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  justify-content: center; align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  padding: 6px 0;
+  cursor: grab;
 }
-.team-filter-intro {
-  font-size: 11px; color: var(--muted); width: 100%;
-  text-align: center; margin-bottom: 2px;
-  letter-spacing: 0.05em; text-transform: uppercase;
+.team-filter-wrap::-webkit-scrollbar { display: none; }
+.team-filter-wrap:active { cursor: grabbing; }
+.team-filter-track {
+  display: flex;
+  gap: 8px;
+  width: max-content;
+  align-items: flex-start;
+  padding: 0 5%;
 }
 .team-pill {
   display: inline-flex; align-items: center; gap: 5px;
@@ -418,22 +473,6 @@ footer {
 }
 
 /* ── CHELSEA MODE ─────────────────────────────────────── */
-.chelsea-btn {
-  background: #034694 !important;
-  border-color: #034694 !important;
-  color: #fff !important;
-  font-weight: 600;
-}
-.chelsea-btn:hover {
-  background: #0557b8 !important;
-  border-color: #C8A84B !important;
-}
-.chelsea-btn.active {
-  background: #023070 !important;
-  border-color: #C8A84B !important;
-  box-shadow: 0 0 0 2px #C8A84B;
-  color: #fff !important;
-}
 
 body.chelsea-mode {
   --bg:           #034694;
@@ -492,9 +531,7 @@ body.chelsea-mode .team-pill.selected { background: rgba(200,168,75,0.2); border
 body.chelsea-mode .pill-btn { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
 body.chelsea-mode .pill-btn:hover { border-color: #C8A84B; color: #C8A84B; }
 body.chelsea-mode .pill-btn.active { background: #C8A84B; border-color: #C8A84B; color: #034694; }
-body.chelsea-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
-body.chelsea-mode .spurs-btn   { background: #132257 !important; border-color: #132257 !important; color: #fff !important; }
-body.chelsea-mode .chelsea-btn { background: #023070 !important; border-color: #C8A84B !important; box-shadow: 0 0 0 2px #C8A84B; }
+body.chelsea-mode .club-btn.chelsea-active { background: #023070 !important; border-color: #C8A84B !important; box-shadow: 0 0 0 2px #C8A84B; }
 body.chelsea-mode .past-section .past-summary { color: rgba(255,255,255,0.6); }
 body.chelsea-mode .past-count { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
 body.chelsea-mode footer { border-top-color: rgba(200,168,75,0.2); }
@@ -526,22 +563,6 @@ body.chelsea-mode .chelsea-derby-label { color: #034694; }
 body.chelsea-mode .chelsea-players { border-top-color: rgba(3,70,148,0.15); }
 
 /* ── SPURS MODE ───────────────────────────────────────── */
-.spurs-btn {
-  background: #132257 !important;
-  border-color: #132257 !important;
-  color: #fff !important;
-  font-weight: 600;
-}
-.spurs-btn:hover {
-  background: #1c3278 !important;
-  border-color: #ADD8E6 !important;
-}
-.spurs-btn.active {
-  background: #0d1a42 !important;
-  border-color: #ADD8E6 !important;
-  box-shadow: 0 0 0 2px #ADD8E6;
-  color: #fff !important;
-}
 
 body.spurs-mode {
   --bg:           #132257;
@@ -600,8 +621,7 @@ body.spurs-mode .team-pill.selected { background: rgba(173,216,230,0.2); border-
 body.spurs-mode .pill-btn { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
 body.spurs-mode .pill-btn:hover { border-color: #ADD8E6; color: #ADD8E6; }
 body.spurs-mode .pill-btn.active { background: #ADD8E6; border-color: #ADD8E6; color: #132257; }
-body.spurs-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
-body.spurs-mode .spurs-btn { background: #0d1a42 !important; border-color: #ADD8E6 !important; box-shadow: 0 0 0 2px #ADD8E6; }
+body.spurs-mode .club-btn.spurs-active { background: #0d1a42 !important; border-color: #ADD8E6 !important; box-shadow: 0 0 0 2px #ADD8E6; }
 body.spurs-mode .past-section .past-summary { color: rgba(255,255,255,0.6); }
 body.spurs-mode footer { border-top-color: rgba(173,216,230,0.2); }
 body.spurs-mode .section-label { color: #ADD8E6; }
@@ -634,23 +654,6 @@ body.spurs-mode .spurs-derby-label { color: #132257; }
 body.spurs-mode .spurs-players { border-top-color: rgba(19,34,87,0.15); }
 
 /* ── ARSENAL MODE ─────────────────────────────────────── */
-/* Button */
-.arsenal-btn {
-  background: #EF0107 !important;
-  border-color: #EF0107 !important;
-  color: #fff !important;
-  font-weight: 600;
-}
-.arsenal-btn:hover {
-  background: #c40006 !important;
-  border-color: #C6A84B !important;
-}
-.arsenal-btn.active {
-  background: #b00005 !important;
-  border-color: #C6A84B !important;
-  box-shadow: 0 0 0 2px #C6A84B;
-  color: #fff !important;
-}
 
 /* Full-page theme when Arsenal Mode is on */
 body.arsenal-mode {
@@ -707,8 +710,7 @@ body.arsenal-mode .team-pill.selected {
 body.arsenal-mode .pill-btn { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
 body.arsenal-mode .pill-btn:hover { border-color: #C6A84B; color: #C6A84B; }
 body.arsenal-mode .pill-btn.active { background: #C6A84B; border-color: #C6A84B; color: #fff; }
-body.arsenal-mode .arsenal-btn { background: #EF0107 !important; border-color: #EF0107 !important; color: #fff !important; }
-body.arsenal-mode .arsenal-btn.active { background: #b00005 !important; border-color: #C6A84B !important; box-shadow: 0 0 0 2px #C6A84B; }
+body.arsenal-mode .club-btn.arsenal-active { background: #b00005 !important; border-color: #C6A84B !important; box-shadow: 0 0 0 2px #C6A84B; }
 body.arsenal-mode .past-section .past-summary { color: rgba(255,255,255,0.65); }
 body.arsenal-mode footer { border-top-color: rgba(2,52,116,0.25); }
 body.arsenal-mode .section-label { color: #023474; }
@@ -780,25 +782,29 @@ body.arsenal-mode .arsenal-players {
       <span class="brand-trophy">🏆</span>
       <div class="brand-text">
         <h1>FWC 2026 Family Tracker</h1>
-        <p>USA · Canada · Mexico</p>
       </div>
     </div>
     <div class="header-controls">
       <button class="pill-btn active" id="btn-all"    onclick="setViewMode('all')">All matches</button>
       <button class="pill-btn clash-btn" id="btn-family" onclick="setViewMode('family')">⚔ Family only</button>
-      <button class="pill-btn arsenal-btn" id="btn-arsenal" onclick="toggleArsenalMode()">🏆 Arsenal Mode</button>
-      <button class="pill-btn spurs-btn"   id="btn-spurs"   onclick="toggleSpursMode()">💩 Spurs Mode</button>
-      <button class="pill-btn chelsea-btn" id="btn-chelsea" onclick="toggleChelseaMode()">⚽ Chelsea Mode</button>
+      <div class="club-mode-wrap" id="club-mode-wrap">
+        <button class="club-btn" id="btn-club" onclick="toggleClubDropdown()">🎽 Club Mode</button>
+        <div class="club-dropdown" id="club-dropdown">
+          <button class="club-option arsenal-option" id="club-opt-arsenal" onclick="selectClub('arsenal')">🏆 Arsenal</button>
+          <button class="club-option spurs-option"   id="club-opt-spurs"   onclick="selectClub('spurs')">💩 Spurs</button>
+          <button class="club-option chelsea-option" id="club-opt-chelsea" onclick="selectClub('chelsea')">⚽ Chelsea</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
 <div class="hero">
-  <div class="hero-eyebrow">FIFA World Cup 2026</div>
-  <div class="hero-title">The Family Bracket</div>
-  <div class="hero-sub">15 teams · 15 family members · 1 trophy</div>
-  <div class="team-filter-intro">Click a team to filter their matches</div>
-  <div class="team-filter-wrap" id="team-pills"></div>
+  <div class="hero-eyebrow">Family Schedule</div>
+  <div class="hero-title">FIFA WORLD CUP 2026</div>
+  <div class="team-filter-wrap">
+    <div class="team-filter-track" id="team-pills"></div>
+  </div>
 </div>
 
 <main>
@@ -1849,28 +1855,143 @@ function renderKnockout() {
   document.getElementById('knockout-view').innerHTML = html;
 }
 
+function buildPillHTML(code, f) {
+  const sel = selectedTeam === code ? ' selected' : '';
+  const next = nextMatchForTeam(code);
+  let nextHtml = '';
+  if (next) {
+    const shortDate = formatSectionDate(next.date).slice(4);
+    nextHtml = `<div class="pill-next">
+      <span class="pill-next-dot"></span>${shortDate} · ${to12h(next.time)}
+    </div>`;
+  }
+  return `<div class="team-pill${sel}" onclick="toggleTeam('${code}')">
+    <div class="pill-main">
+      <span class="pill-flag">${f.flag}</span>
+      <span>${f.name}</span>
+      <span class="pill-person">${f.person}</span>
+    </div>
+    ${nextHtml}
+  </div>`;
+}
+
 function renderTeamPills() {
   const el = document.getElementById('team-pills');
-  el.innerHTML = Object.entries(FAMILY).map(([code, f]) => {
-    const sel = selectedTeam === code ? ' selected' : '';
-    const next = nextMatchForTeam(code);
-    let nextHtml = '';
-    if (next) {
-      // Use the corrected display label so the pill matches the section headers
-      const shortDate = formatSectionDate(next.date).slice(4); // "Fri Jun 12" → "Jun 12"
-      nextHtml = `<div class="pill-next">
-        <span class="pill-next-dot"></span>${shortDate} · ${to12h(next.time)}
-      </div>`;
+  const once = Object.entries(FAMILY).map(([code, f]) => buildPillHTML(code, f)).join('');
+  // Duplicate for seamless auto-scroll loop
+  el.innerHTML = once + once;
+  // Reset scroll so animation restarts cleanly
+  const wrap = el.closest('.team-filter-wrap');
+  if (wrap) wrap.scrollLeft = 0;
+  pillScrollPos = 0;
+}
+
+// ═══════════════════════════════════════════════════════
+// PILL AUTO-SCROLL
+// ═══════════════════════════════════════════════════════
+
+let pillScrollPos = 0;
+let pillScrollRAF = null;
+let pillScrollPaused = false;
+
+function startPillScroll() {
+  const wrap = document.querySelector('.team-filter-wrap');
+  if (!wrap) return;
+
+  // Pause on hover/touch; resume on leave
+  wrap.addEventListener('mouseenter',  () => { pillScrollPaused = true; });
+  wrap.addEventListener('mouseleave',  () => { pillScrollPaused = false; });
+  wrap.addEventListener('touchstart',  () => { pillScrollPaused = true; }, { passive: true });
+  wrap.addEventListener('touchend',    () => { setTimeout(() => { pillScrollPaused = false; }, 800); }, { passive: true });
+
+  // Drag-to-scroll
+  let isDragging = false, dragStartX = 0, dragStartScroll = 0;
+  wrap.addEventListener('pointerdown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartScroll = wrap.scrollLeft;
+    pillScrollPaused = true;
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!isDragging) return;
+    wrap.scrollLeft = dragStartScroll - (e.clientX - dragStartX);
+    pillScrollPos = wrap.scrollLeft;
+  });
+  wrap.addEventListener('pointerup', () => {
+    isDragging = false;
+    setTimeout(() => { pillScrollPaused = false; }, 600);
+  });
+
+  // rAF auto-scroll loop
+  cancelAnimationFrame(pillScrollRAF);
+  function step() {
+    if (!pillScrollPaused && !isDragging) {
+      const track = document.getElementById('team-pills');
+      if (track) {
+        const halfWidth = track.scrollWidth / 2;
+        pillScrollPos += 0.45;
+        if (halfWidth > 0 && pillScrollPos >= halfWidth) pillScrollPos = 0;
+        wrap.scrollLeft = pillScrollPos;
+      }
     }
-    return `<div class="team-pill${sel}" onclick="toggleTeam('${code}')">
-      <div class="pill-main">
-        <span class="pill-flag">${f.flag}</span>
-        <span>${f.name}</span>
-        <span class="pill-person">${f.person}</span>
-      </div>
-      ${nextHtml}
-    </div>`;
-  }).join('');
+    pillScrollRAF = requestAnimationFrame(step);
+  }
+  pillScrollRAF = requestAnimationFrame(step);
+}
+
+// ═══════════════════════════════════════════════════════
+// CLUB MODE CONTROLS
+// ═══════════════════════════════════════════════════════
+
+function updateClubBtn() {
+  const btn = document.getElementById('btn-club');
+  if (!btn) return;
+  const optArsenal = document.getElementById('club-opt-arsenal');
+  const optSpurs   = document.getElementById('club-opt-spurs');
+  const optChelsea = document.getElementById('club-opt-chelsea');
+  optArsenal?.classList.toggle('active', arsenalMode);
+  optSpurs?.classList.toggle('active', spursMode);
+  optChelsea?.classList.toggle('active', chelseaMode);
+  if (arsenalMode) {
+    btn.textContent = '🏆 Arsenal Mode';
+    btn.className = 'club-btn arsenal-active';
+  } else if (spursMode) {
+    btn.textContent = '💩 Spurs Mode';
+    btn.className = 'club-btn spurs-active';
+  } else if (chelseaMode) {
+    btn.textContent = '⚽ Chelsea Mode';
+    btn.className = 'club-btn chelsea-active';
+  } else {
+    btn.textContent = '🎽 Club Mode';
+    btn.className = 'club-btn';
+  }
+}
+
+function toggleClubDropdown() {
+  const dd = document.getElementById('club-dropdown');
+  const isOpen = dd.classList.toggle('open');
+  if (isOpen) {
+    setTimeout(() => document.addEventListener('click', closeClubDropdown), 0);
+  } else {
+    document.removeEventListener('click', closeClubDropdown);
+  }
+}
+
+function closeClubDropdown(e) {
+  const wrap = document.getElementById('club-mode-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('club-dropdown').classList.remove('open');
+    document.removeEventListener('click', closeClubDropdown);
+  }
+}
+
+function selectClub(club) {
+  document.getElementById('club-dropdown').classList.remove('open');
+  document.removeEventListener('click', closeClubDropdown);
+  if (club === 'arsenal') toggleArsenalMode();
+  else if (club === 'spurs')   toggleSpursMode();
+  else if (club === 'chelsea') toggleChelseaMode();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1880,12 +2001,12 @@ function renderTeamPills() {
 function toggleArsenalMode() {
   arsenalMode = !arsenalMode;
   if (arsenalMode) {
-    if (spursMode)   { spursMode   = false; document.body.classList.remove('spurs-mode');   document.getElementById('btn-spurs').classList.remove('active'); }
-    if (chelseaMode) { chelseaMode = false; document.body.classList.remove('chelsea-mode'); document.getElementById('btn-chelsea').classList.remove('active'); }
+    spursMode = false; chelseaMode = false;
+    document.body.classList.remove('spurs-mode', 'chelsea-mode');
+    selectedTeam = null; renderTeamPanel(null); renderTeamPills();
   }
   document.body.classList.toggle('arsenal-mode', arsenalMode);
-  document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
-  if (arsenalMode) { selectedTeam = null; renderTeamPanel(null); renderTeamPills(); }
+  updateClubBtn();
   saveState();
   render();
 }
@@ -1893,12 +2014,12 @@ function toggleArsenalMode() {
 function toggleSpursMode() {
   spursMode = !spursMode;
   if (spursMode) {
-    if (arsenalMode) { arsenalMode = false; document.body.classList.remove('arsenal-mode'); document.getElementById('btn-arsenal').classList.remove('active'); }
-    if (chelseaMode) { chelseaMode = false; document.body.classList.remove('chelsea-mode'); document.getElementById('btn-chelsea').classList.remove('active'); }
+    arsenalMode = false; chelseaMode = false;
+    document.body.classList.remove('arsenal-mode', 'chelsea-mode');
+    selectedTeam = null; renderTeamPanel(null); renderTeamPills();
   }
   document.body.classList.toggle('spurs-mode', spursMode);
-  document.getElementById('btn-spurs').classList.toggle('active', spursMode);
-  if (spursMode) { selectedTeam = null; renderTeamPanel(null); renderTeamPills(); }
+  updateClubBtn();
   saveState();
   render();
 }
@@ -1906,12 +2027,12 @@ function toggleSpursMode() {
 function toggleChelseaMode() {
   chelseaMode = !chelseaMode;
   if (chelseaMode) {
-    if (arsenalMode) { arsenalMode = false; document.body.classList.remove('arsenal-mode'); document.getElementById('btn-arsenal').classList.remove('active'); }
-    if (spursMode)   { spursMode   = false; document.body.classList.remove('spurs-mode');   document.getElementById('btn-spurs').classList.remove('active'); }
+    arsenalMode = false; spursMode = false;
+    document.body.classList.remove('arsenal-mode', 'spurs-mode');
+    selectedTeam = null; renderTeamPanel(null); renderTeamPills();
   }
   document.body.classList.toggle('chelsea-mode', chelseaMode);
-  document.getElementById('btn-chelsea').classList.toggle('active', chelseaMode);
-  if (chelseaMode) { selectedTeam = null; renderTeamPanel(null); renderTeamPills(); }
+  updateClubBtn();
   saveState();
   render();
 }
@@ -1947,12 +2068,10 @@ function toggleTeam(code) {
 function applyPersistedState() {
   document.getElementById('btn-all').classList.toggle('active', !selectedTeam && viewMode === 'all');
   document.getElementById('btn-family').classList.toggle('active', !selectedTeam && viewMode === 'family');
-  document.getElementById('btn-arsenal').classList.toggle('active', arsenalMode);
   document.body.classList.toggle('arsenal-mode', arsenalMode);
-  document.getElementById('btn-spurs').classList.toggle('active', spursMode);
   document.body.classList.toggle('spurs-mode', spursMode);
-  document.getElementById('btn-chelsea').classList.toggle('active', chelseaMode);
   document.body.classList.toggle('chelsea-mode', chelseaMode);
+  updateClubBtn();
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
@@ -1977,6 +2096,7 @@ function applyPersistedState() {
   renderTeamPills();
   renderTeamPanel(selectedTeam);
   render();
+  startPillScroll();
   fetchScores(); // first fetch also calls schedulePoll()
 })();
 </script>
