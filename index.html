@@ -809,6 +809,10 @@ body.arsenal-mode .arsenal-players {
 .toggle-chevron { display: none; }
 .tpanel-news-body-wrap { display: block; }
 
+/* Mobile upcoming-section button — hidden on desktop */
+.mobile-upcoming-btn { display: none; }
+.mobile-no-today     { display: none; }
+
 @media (max-width: 768px) {
 
   /* Hide the pill carousel, show the dropdown instead */
@@ -901,6 +905,45 @@ body.arsenal-mode .arsenal-players {
   #content-layout { flex-direction: column; gap: 14px; }
   #team-panel { width: 100%; position: static; max-height: none; order: -1; }
   #global-news-panel { display: none; }
+
+  /* Today-only view: hide upcoming section by default; show via button */
+  .upcoming-section { display: none; }
+  .upcoming-section.open { display: block; }
+
+  .mobile-upcoming-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin: 14px 0 4px;
+    padding: 13px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .mobile-upcoming-btn:hover { background: var(--surface2); border-color: var(--accent); }
+  .upcoming-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px;
+    min-width: 24px;
+  }
+
+  .mobile-no-today {
+    display: block;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 20px 0 4px;
+  }
 
   /* Team panel news — collapsible on mobile */
   .tpanel-news-toggle {
@@ -2161,6 +2204,11 @@ function renderDateGroups(byDate, firstNoTopMargin = true) {
   `).join('');
 }
 
+// ET today as YYYY-MM-DD (EDT = UTC-4, constant during the tournament)
+function getETToday() {
+  return new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function renderDateSections(matches) {
   const past   = matches.filter(m =>  isMatchPast(m));
   const active = matches.filter(m => !isMatchPast(m));
@@ -2185,9 +2233,37 @@ function renderDateSections(matches) {
       </details>`;
   }
 
-  // ── Upcoming / live matches ──
+  // ── Upcoming / live matches — split into today vs future for mobile ──
   if (active.length > 0) {
-    html += renderDateGroups(groupByDate(active), past.length === 0);
+    const today   = getETToday();
+    const todayMs = active.filter(m => (DATE_ISO[m.date] || '') === today);
+    const futureMs = active.filter(m => (DATE_ISO[m.date] || '') > today);
+    // Also catches matches with unknown/TBD dates that aren't today
+    const otherMs  = active.filter(m => !(DATE_ISO[m.date]) ||
+      ((DATE_ISO[m.date] !== today) && (DATE_ISO[m.date] <= today)));
+
+    const firstSection = past.length === 0;
+
+    // Today's matches (always visible on desktop and mobile)
+    if (todayMs.length > 0) {
+      html += renderDateGroups(groupByDate(todayMs), firstSection);
+    } else if (futureMs.length > 0) {
+      // No matches today — show a lightweight note on mobile only
+      html += `<div class="mobile-no-today">No matches today</div>`;
+    }
+
+    // Future matches — hidden on mobile by default; revealed by button tap
+    if (futureMs.length > 0) {
+      html += `
+        <div class="upcoming-section" id="upcoming-section">
+          ${renderDateGroups(groupByDate(futureMs), firstSection && todayMs.length === 0)}
+        </div>
+        <button class="mobile-upcoming-btn" id="upcoming-toggle-btn"
+          onclick="showMobileUpcoming(this)">
+          <span>Upcoming matches</span>
+          <span class="upcoming-count">${futureMs.length}</span>
+        </button>`;
+    }
   }
 
   return html;
@@ -2303,6 +2379,12 @@ function mobileSelectTeam(code) {
   renderTeamPills(); // also calls syncMobileSelect
   renderTeamPanel(selectedTeam);
   render();
+}
+
+function showMobileUpcoming(btn) {
+  const sec = document.getElementById('upcoming-section');
+  if (sec) sec.classList.add('open');
+  btn.style.display = 'none';
 }
 
 function toggleMobileNews(toggleEl) {
