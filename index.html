@@ -799,6 +799,153 @@ body.arsenal-mode .arsenal-derby-label { color: #EF0107; font-weight: 800; }
 body.arsenal-mode .arsenal-players {
   border-top-color: rgba(2,52,116,0.25);
 }
+
+/* ── MOBILE OPTIMIZATIONS (≤768px) ───────────────────── */
+
+/* Mobile team select — hidden on desktop */
+.mobile-team-select { display: none; }
+
+/* News toggle chevron hidden on desktop; body-wrap always visible on desktop */
+.toggle-chevron { display: none; }
+.tpanel-news-body-wrap { display: block; }
+
+@media (max-width: 768px) {
+
+  /* Hide the pill carousel, show the dropdown instead */
+  .team-filter-wrap { display: none; }
+  .mobile-team-select {
+    display: block;
+    margin: 10px auto 0;
+    width: calc(100% - 2rem);
+    max-width: 360px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: center;
+    cursor: pointer;
+    min-height: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .mobile-team-select option {
+    background: #0d1b3e;
+    color: #fff;
+  }
+
+  body.arsenal-mode  .mobile-team-select { background-color: rgba(239,1,7,0.25);  border-color: rgba(198,168,75,0.4); }
+  body.spurs-mode    .mobile-team-select { background-color: rgba(19,34,87,0.4);   border-color: rgba(173,216,230,0.4); }
+  body.chelsea-mode  .mobile-team-select { background-color: rgba(3,70,148,0.3);   border-color: rgba(200,168,75,0.4); }
+
+  /* Hero — reduce padding */
+  .hero { padding: 1.25rem 1rem 1rem; }
+  .hero-title { font-size: clamp(32px, 9vw, 56px); margin-bottom: 0.75rem; }
+  .hero-eyebrow { margin-bottom: 6px; }
+
+  /* Header — tighten up */
+  .header-inner { padding: 0.65rem 0; gap: 6px; }
+  .brand-text h1 { font-size: 15px; }
+  .header-controls { gap: 6px; }
+  .pill-btn, .club-btn { padding: 8px 12px; font-size: 13px; }
+
+  /* Main padding */
+  main { padding: 1rem; }
+
+  /* Phase tabs — horizontally scrollable sticky strip */
+  .phase-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+    padding-bottom: 4px;
+    margin-bottom: 1rem;
+    position: sticky;
+    top: 54px;
+    z-index: 50;
+    background: var(--bg);
+    padding-top: 6px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  }
+  .phase-tabs::-webkit-scrollbar { display: none; }
+  .phase-tab {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  /* Update bar — hide verbose text, keep refresh button */
+  #last-updated { display: none; }
+  .update-bar { padding: 4px 0 10px; }
+  .refresh-btn { min-height: 44px; padding: 8px 14px; }
+
+  /* Match grid — single column */
+  .match-grid { grid-template-columns: 1fr; gap: 8px; }
+
+  /* Match cards */
+  .match-card { padding: 12px 14px; }
+
+  /* Team panel: float above matches on mobile */
+  #content-layout { flex-direction: column; gap: 14px; }
+  #team-panel { width: 100%; position: static; max-height: none; order: -1; }
+  #global-news-panel { display: none; }
+
+  /* Team panel news — collapsible on mobile */
+  .tpanel-news-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    min-height: 44px;
+    padding: 4px 0;
+  }
+  .tpanel-news-toggle .toggle-chevron {
+    display: inline;
+    font-size: 10px;
+    transition: transform 0.2s;
+    color: var(--muted);
+  }
+  .tpanel-news-toggle.open .toggle-chevron { transform: rotate(180deg); }
+  .tpanel-news-body-wrap {
+    display: block;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+  }
+  .tpanel-news-body-wrap.open { max-height: 1200px; }
+
+  /* Buttons min tap size */
+  .pill-btn, .club-btn, .refresh-btn, .phase-tab,
+  .past-summary { min-height: 44px; }
+
+  /* Scores */
+  .score { font-size: 20px; }
+  .team-code { font-size: 13px; }
+  .team-flag { font-size: 18px; }
+
+  /* Footer compact */
+  footer { padding: 1.25rem 1rem; font-size: 11px; }
+
+}
+
+@media (max-width: 380px) {
+  .hero-title { font-size: 28px; }
+  .brand-text h1 { font-size: 13px; }
+  .pill-btn, .club-btn { padding: 7px 10px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
@@ -837,6 +984,10 @@ body.arsenal-mode .arsenal-players {
   <div class="team-filter-wrap">
     <div class="team-filter-track" id="team-pills"></div>
   </div>
+  <!-- Mobile-only team selector — hidden on desktop via CSS -->
+  <select id="team-select-mobile" class="mobile-team-select" onchange="mobileSelectTeam(this.value)">
+    <option value="">All teams</option>
+  </select>
 </div>
 
 <main>
@@ -1592,9 +1743,14 @@ function renderTeamPanel(code) {
     </div>` : ''}
 
     <div class="tpanel-section">
-      <div class="tpanel-section-title">Recent News</div>
-      <div class="tpanel-news-body">
-        <div class="news-loading">Loading news…</div>
+      <div class="tpanel-news-toggle" onclick="toggleMobileNews(this)" role="button" aria-expanded="false">
+        <div class="tpanel-section-title" style="margin-bottom:0">Recent News</div>
+        <span class="toggle-chevron">▼</span>
+      </div>
+      <div class="tpanel-news-body-wrap">
+        <div class="tpanel-news-body" style="padding-top:8px">
+          <div class="news-loading">Loading news…</div>
+        </div>
       </div>
     </div>
   `;
@@ -2116,6 +2272,47 @@ function renderTeamPills() {
   const wrap = el.closest('.team-filter-wrap');
   if (wrap) wrap.scrollLeft = 0;
   pillScrollPos = 0;
+  syncMobileSelect();
+}
+
+// ── MOBILE TEAM SELECT ───────────────────────────────────────
+
+function initMobileTeamSelect() {
+  const sel = document.getElementById('team-select-mobile');
+  if (!sel) return;
+  // Populate options
+  const opts = Object.entries(FAMILY).map(([code, f]) =>
+    `<option value="${code}">${f.flag} ${f.name} · ${f.person}</option>`
+  ).join('');
+  sel.innerHTML = `<option value="">🌍 All teams</option>${opts}`;
+  syncMobileSelect();
+}
+
+function syncMobileSelect() {
+  const sel = document.getElementById('team-select-mobile');
+  if (!sel) return;
+  sel.value = selectedTeam || '';
+}
+
+function mobileSelectTeam(code) {
+  selectedTeam = code || null;
+  document.getElementById('btn-all').classList.toggle('active', !selectedTeam && viewMode === 'all');
+  document.getElementById('btn-family').classList.toggle('active', !selectedTeam && viewMode === 'family');
+  saveState();
+  renderHero(selectedTeam);
+  renderTeamPills(); // also calls syncMobileSelect
+  renderTeamPanel(selectedTeam);
+  render();
+}
+
+function toggleMobileNews(toggleEl) {
+  // Only toggle on mobile; on desktop the wrap has no max-height constraint
+  if (window.innerWidth > 768) return;
+  const wrap = toggleEl.closest('.tpanel-section').querySelector('.tpanel-news-body-wrap');
+  if (!wrap) return;
+  const isOpen = wrap.classList.toggle('open');
+  toggleEl.classList.toggle('open', isOpen);
+  toggleEl.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2349,6 +2546,7 @@ function applyPersistedState() {
   updateClubBtn();
   setGlobalNewsVisible(!selectedTeam);
   renderHero(selectedTeam);
+  syncMobileSelect();
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
@@ -2370,6 +2568,7 @@ function applyPersistedState() {
   loadCachedScores(); // baseline from previous session; API data will overwrite
   document.getElementById('loading-overlay').style.display = 'none';
   applyPersistedState();
+  initMobileTeamSelect();
   renderTeamPills();
   renderTeamPanel(selectedTeam);
   render();
