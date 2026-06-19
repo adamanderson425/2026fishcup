@@ -136,6 +136,27 @@ header {
   color: var(--text); margin-bottom: 1.25rem;
 }
 
+/* TEAM HERO (when a team is selected) */
+#hero-team { display: none; }
+.hero-flag { font-size: 64px; line-height: 1; margin-bottom: 12px; }
+.hero-team-name {
+  font-size: clamp(36px, 8vw, 72px); font-weight: 900;
+  letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.5rem;
+}
+.hero-team-picker {
+  font-size: clamp(16px, 3vw, 22px); font-weight: 600;
+  margin-bottom: 1.5rem; opacity: 0.9;
+}
+.hero-back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 22px; border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: #fff; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+}
+.hero-back-btn:hover { background: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.65); }
+
 /* TEAM FILTER PILL SCROLLER */
 .team-filter-wrap {
   overflow-x: auto;
@@ -825,10 +846,18 @@ body.arsenal-mode .arsenal-players {
 </header>
 
 <div class="hero">
-  <div class="hero-eyebrow">Family Schedule</div>
-  <div class="hero-title">FIFA WORLD CUP 2026</div>
-  <div class="team-filter-wrap">
-    <div class="team-filter-track" id="team-pills"></div>
+  <div id="hero-default">
+    <div class="hero-eyebrow">Family Schedule</div>
+    <div class="hero-title">FIFA WORLD CUP 2026</div>
+    <div class="team-filter-wrap">
+      <div class="team-filter-track" id="team-pills"></div>
+    </div>
+  </div>
+  <div id="hero-team" style="display:none">
+    <div class="hero-flag" id="hero-team-flag"></div>
+    <div class="hero-team-name" id="hero-team-name"></div>
+    <div class="hero-team-picker" id="hero-team-picker"></div>
+    <button class="hero-back-btn" onclick="goHome()">← Back to Home</button>
   </div>
 </div>
 
@@ -887,6 +916,26 @@ const FAMILY = {
   USA: { name:"USA",          person:"Mike",     flag:"🇺🇸" },
   MAR: { name:"Morocco",      person:"Gigi",     flag:"🇲🇦" },
   NOR: { name:"Norway",       person:"Courtney", flag:"🇳🇴" },
+};
+
+// Hero colours when a team is selected — derived from national flag
+// bg1/bg2: gradient, name: team name text, picker: "X's Pick" accent
+const TEAM_COLORS = {
+  ENG: { bg1:'#CF142B', bg2:'#A50E22', name:'#FFFFFF', picker:'#82AAFF' },
+  CPV: { bg1:'#003893', bg2:'#002870', name:'#FFFFFF', picker:'#CF2027' },
+  NED: { bg1:'#AE1C28', bg2:'#8C1520', name:'#FFFFFF', picker:'#b0c4ff' },
+  ESP: { bg1:'#AA151B', bg2:'#880F15', name:'#FFFFFF', picker:'#F1BF00' },
+  ARG: { bg1:'#74ACDF', bg2:'#5A92C5', name:'#FFFFFF', picker:'#F6B40E' },
+  FRA: { bg1:'#002395', bg2:'#001A70', name:'#FFFFFF', picker:'#ED2939' },
+  GER: { bg1:'#1A1A1A', bg2:'#0A0A0A', name:'#FFCE00', picker:'#DD0000' },
+  BRA: { bg1:'#009C3B', bg2:'#007A2E', name:'#FEDF00', picker:'#6ba3ff' },
+  POR: { bg1:'#006600', bg2:'#004D00', name:'#FFFFFF', picker:'#FF6666' },
+  ECU: { bg1:'#2a6dd9', bg2:'#1f55b0', name:'#FFFFFF', picker:'#FFD100' },
+  BEL: { bg1:'#1A1A1A', bg2:'#0A0A0A', name:'#EFD000', picker:'#EF3340' },
+  AUS: { bg1:'#00008B', bg2:'#000066', name:'#FFFFFF', picker:'#FF6666' },
+  USA: { bg1:'#3C3B6E', bg2:'#2D2C55', name:'#FFFFFF', picker:'#FF6B6B' },
+  MAR: { bg1:'#C1272D', bg2:'#9A1F24', name:'#FFFFFF', picker:'#90EE90' },
+  NOR: { bg1:'#EF2B2D', bg2:'#CC2224', name:'#FFFFFF', picker:'#82AAFF' },
 };
 
 const FLAGS = {
@@ -2267,13 +2316,58 @@ function setPhase(p) {
   render();
 }
 
+// ── Hero rendering ───────────────────────────────────────────
+
+function renderHero(code) {
+  const hero      = document.querySelector('.hero');
+  const defaultEl = document.getElementById('hero-default');
+  const teamEl    = document.getElementById('hero-team');
+
+  if (!code || !FAMILY[code]) {
+    hero.style.background        = '';
+    hero.style.borderBottomColor = '';
+    defaultEl.style.display      = '';
+    teamEl.style.display         = 'none';
+    return;
+  }
+
+  const f = FAMILY[code];
+  const c = TEAM_COLORS[code] || { bg1:'#0d1b3e', bg2:'#1a0a2e', name:'#fff', picker:'#f59e0b' };
+
+  hero.style.background        = `linear-gradient(135deg, ${c.bg1} 0%, ${c.bg2} 100%)`;
+  hero.style.borderBottomColor = 'rgba(255,255,255,0.15)';
+
+  document.getElementById('hero-team-flag').textContent = f.flag;
+  const nameEl   = document.getElementById('hero-team-name');
+  const pickerEl = document.getElementById('hero-team-picker');
+  nameEl.textContent   = f.name;
+  nameEl.style.color   = c.name;
+  pickerEl.textContent = `${f.person}'s Pick`;
+  pickerEl.style.color = c.picker;
+
+  defaultEl.style.display = 'none';
+  teamEl.style.display    = '';
+}
+
+function goHome() {
+  selectedTeam = null;
+  document.getElementById('btn-all').classList.toggle('active', viewMode === 'all');
+  document.getElementById('btn-family').classList.toggle('active', viewMode === 'family');
+  saveState();
+  renderHero(null);
+  renderTeamPills();
+  renderTeamPanel(null);
+  render();
+}
+
 function toggleTeam(code) {
   selectedTeam = selectedTeam === code ? null : code;
   document.getElementById('btn-all').classList.toggle('active', !selectedTeam && viewMode === 'all');
   document.getElementById('btn-family').classList.toggle('active', !selectedTeam && viewMode === 'family');
   saveState();
+  renderHero(selectedTeam);
   renderTeamPills();
-  renderTeamPanel(selectedTeam); // show/hide right-hand panel
+  renderTeamPanel(selectedTeam);
   render();
 }
 
@@ -2284,8 +2378,8 @@ function applyPersistedState() {
   document.body.classList.toggle('spurs-mode', spursMode);
   document.body.classList.toggle('chelsea-mode', chelseaMode);
   updateClubBtn();
-  // Global news panel: visible only when no team is selected
   setGlobalNewsVisible(!selectedTeam);
+  renderHero(selectedTeam);
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
