@@ -125,37 +125,19 @@ header {
   padding: 1.75rem 1.5rem 1.5rem;
   text-align: center;
   border-bottom: 1px solid var(--border);
+  transition: background 0.5s ease, border-bottom-color 0.4s ease;
 }
 .hero-eyebrow {
   font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--gold); margin-bottom: 10px;
+  transition: color 0.4s ease;
 }
 .hero-title {
   font-size: clamp(40px, 10vw, 88px); font-weight: 900;
   letter-spacing: -0.04em; line-height: 1;
   color: var(--text); margin-bottom: 1.25rem;
+  transition: color 0.4s ease;
 }
-
-/* TEAM HERO (when a team is selected) */
-/* #hero-team initial visibility controlled via inline style in HTML */
-.hero-flag { font-size: 64px; line-height: 1; margin-bottom: 12px; }
-.hero-team-name {
-  font-size: clamp(36px, 8vw, 72px); font-weight: 900;
-  letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.5rem;
-}
-.hero-team-picker {
-  font-size: clamp(16px, 3vw, 22px); font-weight: 600;
-  margin-bottom: 1.5rem; opacity: 0.9;
-}
-.hero-back-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 10px 22px; border-radius: 999px;
-  border: 2px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: #fff; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: all 0.18s;
-}
-.hero-back-btn:hover { background: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.65); }
 
 /* TEAM FILTER PILL SCROLLER */
 .team-filter-wrap {
@@ -846,18 +828,10 @@ body.arsenal-mode .arsenal-players {
 </header>
 
 <div class="hero">
-  <div id="hero-default">
-    <div class="hero-eyebrow">Family Schedule</div>
-    <div class="hero-title">FIFA WORLD CUP 2026</div>
-    <div class="team-filter-wrap">
-      <div class="team-filter-track" id="team-pills"></div>
-    </div>
-  </div>
-  <div id="hero-team" style="display:none">
-    <div class="hero-flag" id="hero-team-flag"></div>
-    <div class="hero-team-name" id="hero-team-name"></div>
-    <div class="hero-team-picker" id="hero-team-picker"></div>
-    <button class="hero-back-btn" onclick="goHome()">← Back to Home</button>
+  <div class="hero-eyebrow" id="hero-eyebrow">Family Schedule</div>
+  <div class="hero-title" id="hero-title">FIFA WORLD CUP 2026</div>
+  <div class="team-filter-wrap">
+    <div class="team-filter-track" id="team-pills"></div>
   </div>
 </div>
 
@@ -2184,10 +2158,10 @@ function startPillScroll() {
     if (didDrag) { e.stopPropagation(); didDrag = false; }
   }, true);
 
-  // rAF auto-scroll loop
+  // rAF auto-scroll loop — also frozen while a team is selected
   cancelAnimationFrame(pillScrollRAF);
   function step() {
-    if (!pillScrollPaused && !isDragging) {
+    if (!pillScrollPaused && !isDragging && !selectedTeam) {
       const track = document.getElementById('team-pills');
       if (track) {
         const halfWidth = track.scrollWidth / 2;
@@ -2316,48 +2290,39 @@ function setPhase(p) {
   render();
 }
 
-// ── Hero rendering ───────────────────────────────────────────
+// ── Hero rendering — tints existing text/bg, keeps layout identical ─
 
 function renderHero(code) {
-  const hero      = document.querySelector('.hero');
-  const defaultEl = document.getElementById('hero-default');
-  const teamEl    = document.getElementById('hero-team');
+  const hero     = document.querySelector('.hero');
+  const titleEl  = document.getElementById('hero-title');
+  const eyebrow  = document.getElementById('hero-eyebrow');
 
   if (!code || !FAMILY[code]) {
     hero.style.background        = '';
     hero.style.borderBottomColor = '';
-    defaultEl.style.display      = '';
-    teamEl.style.display         = 'none';
+    if (titleEl)  titleEl.style.color  = '';
+    if (eyebrow)  eyebrow.style.color  = '';
     return;
   }
 
-  const f = FAMILY[code];
   const c = TEAM_COLORS[code] || { bg1:'#0d1b3e', bg2:'#1a0a2e', name:'#fff', picker:'#f59e0b' };
-
   hero.style.background        = `linear-gradient(135deg, ${c.bg1} 0%, ${c.bg2} 100%)`;
   hero.style.borderBottomColor = 'rgba(255,255,255,0.15)';
-
-  document.getElementById('hero-team-flag').textContent = f.flag;
-  const nameEl   = document.getElementById('hero-team-name');
-  const pickerEl = document.getElementById('hero-team-picker');
-  nameEl.textContent   = f.name;
-  nameEl.style.color   = c.name;
-  pickerEl.textContent = `${f.person}'s Pick`;
-  pickerEl.style.color = c.picker;
-
-  defaultEl.style.display = 'none';
-  teamEl.style.display    = 'block';
+  // "FIFA WORLD CUP 2026" → secondary colour; "Family Schedule" → tertiary
+  if (titleEl)  titleEl.style.color  = c.name;
+  if (eyebrow)  eyebrow.style.color  = c.picker;
 }
 
-function goHome() {
-  selectedTeam = null;
-  document.getElementById('btn-all').classList.toggle('active', viewMode === 'all');
-  document.getElementById('btn-family').classList.toggle('active', viewMode === 'family');
-  saveState();
-  renderHero(null);
-  renderTeamPills();
-  renderTeamPanel(null);
-  render();
+function scrollToSelectedPill(code) {
+  const wrap = document.querySelector('.team-filter-wrap');
+  if (!wrap) return;
+  // Find the first pill in the track whose onclick matches the selected code
+  const pill = wrap.querySelector(`.team-pill.selected`);
+  if (!pill) return;
+  const pillCenter = pill.offsetLeft + pill.offsetWidth / 2;
+  const target = Math.max(0, pillCenter - wrap.clientWidth / 2);
+  wrap.scrollLeft = target;
+  pillScrollPos   = target;
 }
 
 function toggleTeam(code) {
@@ -2367,6 +2332,7 @@ function toggleTeam(code) {
   saveState();
   renderHero(selectedTeam);
   renderTeamPills();
+  if (selectedTeam) scrollToSelectedPill(selectedTeam);
   renderTeamPanel(selectedTeam);
   render();
 }
@@ -2402,6 +2368,7 @@ function applyPersistedState() {
   document.getElementById('loading-overlay').style.display = 'none';
   applyPersistedState();
   renderTeamPills();
+  if (selectedTeam) scrollToSelectedPill(selectedTeam);
   renderTeamPanel(selectedTeam);
   render();
   startPillScroll();
