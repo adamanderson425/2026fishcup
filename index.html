@@ -137,7 +137,7 @@ header {
 }
 
 /* TEAM HERO (when a team is selected) */
-#hero-team { display: none; }
+/* #hero-team initial visibility controlled via inline style in HTML */
 .hero-flag { font-size: 64px; line-height: 1; margin-bottom: 12px; }
 .hero-team-name {
   font-size: clamp(36px, 8vw, 72px); font-weight: 900;
@@ -2346,7 +2346,7 @@ function renderHero(code) {
   pickerEl.style.color = c.picker;
 
   defaultEl.style.display = 'none';
-  teamEl.style.display    = '';
+  teamEl.style.display    = 'block';
 }
 
 function goHome() {
