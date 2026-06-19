@@ -380,6 +380,25 @@ details[open] .past-toggle-icon { transform: rotate(90deg); }
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
 }
+
+/* GLOBAL NEWS PANEL */
+#global-news-panel {
+  width: 300px; flex-shrink: 0;
+  position: sticky; top: 72px;
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.gnews-header {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--text);
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+body.arsenal-mode  #global-news-panel .gnews-header { color: #C6A84B; border-color: rgba(2,52,116,0.25); }
+body.spurs-mode    #global-news-panel .gnews-header { color: #ADD8E6; border-color: rgba(19,34,87,0.25); }
+body.chelsea-mode  #global-news-panel .gnews-header { color: #C8A84B; border-color: rgba(3,70,148,0.25); }
 .tpanel-header {
   background: linear-gradient(135deg, #0d1b3e, #1a0a2e);
   border: 1px solid var(--border2); border-radius: var(--radius);
@@ -448,6 +467,7 @@ details[open] .past-toggle-icon { transform: rotate(90deg); }
 @media(max-width: 900px) {
   #content-layout { flex-direction: column; }
   #team-panel { width: 100%; position: static; max-height: none; display: none; }
+  #global-news-panel { display: none; }
 }
 
 /* FOOTER */
@@ -835,6 +855,10 @@ body.arsenal-mode .arsenal-players {
       <div id="knockout-view" style="display:none"></div>
     </div>
     <aside id="team-panel"></aside>
+    <aside id="global-news-panel">
+      <div class="gnews-header">⚽ World Cup News</div>
+      <div id="global-news-body"><div class="news-loading">Loading…</div></div>
+    </aside>
   </div>
 </main>
 
@@ -1330,10 +1354,34 @@ async function fetchESPNNews(code) {
 async function fetchGuardianNews(code) {
   if (!GUARDIAN_API_KEY) return [];
   const teamName = TEAM_FULL_NAME[code] || FAMILY[code]?.name || code;
-  const q = encodeURIComponent(`${teamName} FIFA World Cup 2026`);
+  const q = encodeURIComponent(`"${teamName}" FIFA World Cup 2026`);
   try {
     const r = await fetch(
-      `https://content.guardianapis.com/search?q=${q}&section=football&order-by=newest&page-size=5&show-fields=thumbnail,trailText&api-key=${GUARDIAN_API_KEY}`,
+      `https://content.guardianapis.com/search?q=${q}&section=football&order-by=newest&page-size=8&show-fields=thumbnail,trailText&api-key=${GUARDIAN_API_KEY}`,
+      { signal: AbortSignal.timeout(7000) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    const nameLC = teamName.toLowerCase();
+    // Only keep articles that actually mention the team name in the headline
+    return (d.response?.results || [])
+      .filter(a => a.webTitle.toLowerCase().includes(nameLC))
+      .map(a => ({
+        headline: a.webTitle,
+        url:      a.webUrl,
+        thumb:    a.fields?.thumbnail || null,
+        published: a.webPublicationDate || null,
+        source:   'guardian',
+      }));
+  } catch(e) { return []; }
+}
+
+async function fetchGuardianWCNews() {
+  if (!GUARDIAN_API_KEY) return [];
+  const q = encodeURIComponent('FIFA World Cup 2026');
+  try {
+    const r = await fetch(
+      `https://content.guardianapis.com/search?q=${q}&section=football&order-by=newest&page-size=12&show-fields=thumbnail,trailText&api-key=${GUARDIAN_API_KEY}`,
       { signal: AbortSignal.timeout(7000) }
     );
     if (!r.ok) return [];
@@ -1344,26 +1392,6 @@ async function fetchGuardianNews(code) {
       thumb:    a.fields?.thumbnail || null,
       published: a.webPublicationDate || null,
       source:   'guardian',
-    }));
-  } catch(e) { return []; }
-}
-
-async function fetchWikipediaNews(code) {
-  const teamName = TEAM_FULL_NAME[code] || FAMILY[code]?.name || code;
-  const q = encodeURIComponent(`${teamName} FIFA World Cup 2026`);
-  try {
-    const r = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${q}&srlimit=3&format=json&origin=*`,
-      { signal: AbortSignal.timeout(7000) }
-    );
-    if (!r.ok) return [];
-    const d = await r.json();
-    return (d.query?.search || []).map(a => ({
-      headline: a.title,
-      url:      `https://en.wikipedia.org/wiki/${encodeURIComponent(a.title.replace(/ /g, '_'))}`,
-      thumb:    null,
-      published: a.timestamp || null,
-      source:   'wikipedia',
     }));
   } catch(e) { return []; }
 }
@@ -1396,29 +1424,9 @@ function renderNewsArticle(a) {
 
 // ── Main entry point ────────────────────────────────────────
 
-async function fetchTeamNews(code) {
-  const panel  = document.getElementById('team-panel');
-  const newsEl = panel?.querySelector('.tpanel-news-body');
-  if (!newsEl) return;
-
-  newsEl.innerHTML = '<div class="news-loading">Loading news…</div>';
-
-  // Fire all three sources in parallel; any failure is silently ignored
-  const [espnRes, guardianRes, wikiRes] = await Promise.allSettled([
-    fetchESPNNews(code),
-    fetchGuardianNews(code),
-    fetchWikipediaNews(code),
-  ]);
-
-  const all = [
-    ...(espnRes.status     === 'fulfilled' ? espnRes.value     : []),
-    ...(guardianRes.status === 'fulfilled' ? guardianRes.value : []),
-    ...(wikiRes.status     === 'fulfilled' ? wikiRes.value     : []),
-  ];
-
-  // Deduplicate by first 40 chars of lowercased headline, sort newest first, cap at 10
+function mergeAndRender(arrays, cap = 10) {
   const seen = new Set();
-  const deduped = all
+  return arrays.flat()
     .sort((a, b) => (b.published || '').localeCompare(a.published || ''))
     .filter(a => {
       const key = a.headline.toLowerCase().slice(0, 40);
@@ -1426,26 +1434,87 @@ async function fetchTeamNews(code) {
       seen.add(key);
       return true;
     })
-    .slice(0, 10);
+    .slice(0, cap);
+}
+
+async function fetchTeamNews(code) {
+  const panel  = document.getElementById('team-panel');
+  const newsEl = panel?.querySelector('.tpanel-news-body');
+  if (!newsEl) return;
+
+  newsEl.innerHTML = '<div class="news-loading">Loading news…</div>';
+
+  // ESPN + Guardian only (both filtered to team-specific articles)
+  const [espnRes, guardianRes] = await Promise.allSettled([
+    fetchESPNNews(code),
+    fetchGuardianNews(code),
+  ]);
+
+  const deduped = mergeAndRender([
+    espnRes.status     === 'fulfilled' ? espnRes.value     : [],
+    guardianRes.status === 'fulfilled' ? guardianRes.value : [],
+  ]);
 
   if (deduped.length === 0) {
     newsEl.innerHTML = '<div class="news-empty">No recent news found.</div>';
     return;
   }
-
   newsEl.innerHTML = `<div class="news-list">${deduped.map(renderNewsArticle).join('')}</div>`;
+}
+
+async function fetchGlobalNews() {
+  const el = document.getElementById('global-news-body');
+  if (!el) return;
+
+  // ESPN general WC feed + Guardian general WC feed
+  const [espnRes, guardianRes] = await Promise.allSettled([
+    (async () => {
+      const r = await fetch(
+        'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=15',
+        { signal: AbortSignal.timeout(7000) }
+      );
+      if (!r.ok) return [];
+      const d = await r.json();
+      return (d.articles || []).map(a => ({
+        headline: a.headline, url: a.links?.web?.href || '#',
+        thumb: a.images?.[0]?.url || null, published: a.published || null, source: 'espn',
+      }));
+    })(),
+    fetchGuardianWCNews(),
+  ]);
+
+  const deduped = mergeAndRender([
+    espnRes.status     === 'fulfilled' ? espnRes.value     : [],
+    guardianRes.status === 'fulfilled' ? guardianRes.value : [],
+  ], 15);
+
+  if (deduped.length === 0) {
+    el.innerHTML = '<div class="news-empty">No news found.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="news-list">${deduped.map(renderNewsArticle).join('')}</div>`;
+}
+
+function setGlobalNewsVisible(visible) {
+  const gp = document.getElementById('global-news-panel');
+  if (gp) gp.style.display = visible ? '' : 'none';
 }
 
 function renderTeamPanel(code) {
   const panel = document.getElementById('team-panel');
-  if (!code) { panel.style.display = 'none'; return; }
+  if (!code) {
+    panel.style.display = 'none';
+    setGlobalNewsVisible(true);
+    return;
+  }
 
   const f = FAMILY[code];
-  if (!f) { panel.style.display = 'none'; return; }
+  if (!f) { panel.style.display = 'none'; setGlobalNewsVisible(true); return; }
 
   const players = KEY_PLAYERS[code] || [];
 
   panel.style.display = 'block';
+  setGlobalNewsVisible(false);
   panel.innerHTML = `
     <div class="tpanel-header">
       <span class="tpanel-flag">${f.flag}</span>
@@ -2190,6 +2259,8 @@ function applyPersistedState() {
   document.body.classList.toggle('spurs-mode', spursMode);
   document.body.classList.toggle('chelsea-mode', chelseaMode);
   updateClubBtn();
+  // Global news panel: visible only when no team is selected
+  setGlobalNewsVisible(!selectedTeam);
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + activePhase)?.classList.add('active');
 }
@@ -2215,6 +2286,7 @@ function applyPersistedState() {
   renderTeamPanel(selectedTeam);
   render();
   startPillScroll();
+  fetchGlobalNews(); // load right-side WC news feed
   fetchScores(); // first fetch also calls schedulePoll()
 })();
 </script>
