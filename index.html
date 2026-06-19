@@ -437,6 +437,11 @@ details[open] .past-toggle-icon { transform: rotate(90deg); }
   -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .news-age { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.news-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+.news-source {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted); opacity: 0.7;
+}
 .news-loading { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; }
 .news-empty  { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; }
 
@@ -871,6 +876,19 @@ const FLAGS = {
   USA:"🇺🇸",AUS:"🇦🇺",SCO:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",HAI:"🇭🇹",GHA:"🇬🇭",PAN:"🇵🇦",
 };
 
+// ── NEWS CONFIG ──────────────────────────────────────────────
+// Paste your free Guardian API key here (https://open-platform.theguardian.com).
+// Leave blank and Guardian articles are silently skipped — ESPN + Wikipedia still load.
+const GUARDIAN_API_KEY = '';
+
+// Full English team names used by Guardian + Wikipedia queries
+const TEAM_FULL_NAME = {
+  ENG:'England',     ESP:'Spain',        ARG:'Argentina',  FRA:'France',
+  GER:'Germany',     BRA:'Brazil',       POR:'Portugal',   ECU:'Ecuador',
+  BEL:'Belgium',     AUS:'Australia',    USA:'United States', MAR:'Morocco',
+  NOR:'Norway',      NED:'Netherlands',  CPV:'Cape Verde',
+};
+
 // KEY PLAYERS — shown in the team info panel when a family team is selected
 const KEY_PLAYERS = {
   ENG: [
@@ -1261,68 +1279,161 @@ function timeAgo(isoString) {
   return Math.floor(diff / 86400) + 'd ago';
 }
 
-async function fetchTeamNews(code) {
-  const panel = document.getElementById('team-panel');
-  const newsEl = panel?.querySelector('.tpanel-news-body');
-  if (!newsEl) return;
+// ── Per-source fetchers — each returns normalised { headline, url, thumb, published, source } ──
 
-  newsEl.innerHTML = '<div class="news-loading">Loading news…</div>';
+async function fetchESPNNews(code) {
+  const espnId = await resolveESPNTeamId(code);
+  const out = [];
 
-  try {
-    const espnId = await resolveESPNTeamId(code);
-    let articles = [];
-
-    if (espnId) {
-      // Team-specific news endpoint
+  if (espnId) {
+    try {
       const r = await fetch(
         `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams/${espnId}/news?limit=6`,
         { signal: AbortSignal.timeout(7000) }
       );
       if (r.ok) {
         const d = await r.json();
-        articles = d.articles || [];
+        (d.articles || []).forEach(a => {
+          if (!a.headline) return;
+          out.push({ headline: a.headline, url: a.links?.web?.href || '#',
+            thumb: a.images?.[0]?.url || null, published: a.published || null, source: 'espn' });
+        });
       }
-    }
+    } catch(e) {}
+  }
 
-    // Fallback: search general WC news feed for the team name
-    if (articles.length === 0) {
-      const teamName = FAMILY[code]?.name || code;
+  // Fallback: filter general WC feed by team name
+  if (out.length === 0) {
+    try {
+      const teamName = (TEAM_FULL_NAME[code] || FAMILY[code]?.name || code).toLowerCase();
       const r = await fetch(
         'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=40',
         { signal: AbortSignal.timeout(7000) }
       );
       if (r.ok) {
         const d = await r.json();
-        const term = teamName.toLowerCase();
-        articles = (d.articles || [])
-          .filter(a => (a.headline + ' ' + (a.description || '')).toLowerCase().includes(term))
-          .slice(0, 6);
+        (d.articles || [])
+          .filter(a => (a.headline + ' ' + (a.description || '')).toLowerCase().includes(teamName))
+          .slice(0, 6)
+          .forEach(a => {
+            if (!a.headline) return;
+            out.push({ headline: a.headline, url: a.links?.web?.href || '#',
+              thumb: a.images?.[0]?.url || null, published: a.published || null, source: 'espn' });
+          });
       }
-    }
-
-    if (articles.length === 0) {
-      newsEl.innerHTML = '<div class="news-empty">No recent news found.</div>';
-      return;
-    }
-
-    newsEl.innerHTML = `<div class="news-list">${articles.map(a => {
-      const url   = a.links?.web?.href || '#';
-      const img   = a.images?.[0]?.url;
-      const age   = a.published ? timeAgo(a.published) : '';
-      const thumb = img
-        ? `<img class="news-thumb" src="${img}" alt="" loading="lazy">`
-        : `<div class="news-thumb-placeholder">📰</div>`;
-      return `<a class="news-item" href="${url}" target="_blank" rel="noopener noreferrer">
-        ${thumb}
-        <div class="news-content">
-          <div class="news-headline">${a.headline || 'Read article'}</div>
-          ${age ? `<div class="news-age">${age}</div>` : ''}
-        </div>
-      </a>`;
-    }).join('')}</div>`;
-  } catch(e) {
-    newsEl.innerHTML = '<div class="news-empty">Could not load news.</div>';
+    } catch(e) {}
   }
+
+  return out;
+}
+
+async function fetchGuardianNews(code) {
+  if (!GUARDIAN_API_KEY) return [];
+  const teamName = TEAM_FULL_NAME[code] || FAMILY[code]?.name || code;
+  const q = encodeURIComponent(`${teamName} FIFA World Cup 2026`);
+  try {
+    const r = await fetch(
+      `https://content.guardianapis.com/search?q=${q}&section=football&order-by=newest&page-size=5&show-fields=thumbnail,trailText&api-key=${GUARDIAN_API_KEY}`,
+      { signal: AbortSignal.timeout(7000) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return (d.response?.results || []).map(a => ({
+      headline: a.webTitle,
+      url:      a.webUrl,
+      thumb:    a.fields?.thumbnail || null,
+      published: a.webPublicationDate || null,
+      source:   'guardian',
+    }));
+  } catch(e) { return []; }
+}
+
+async function fetchWikipediaNews(code) {
+  const teamName = TEAM_FULL_NAME[code] || FAMILY[code]?.name || code;
+  const q = encodeURIComponent(`${teamName} FIFA World Cup 2026`);
+  try {
+    const r = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${q}&srlimit=3&format=json&origin=*`,
+      { signal: AbortSignal.timeout(7000) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return (d.query?.search || []).map(a => ({
+      headline: a.title,
+      url:      `https://en.wikipedia.org/wiki/${encodeURIComponent(a.title.replace(/ /g, '_'))}`,
+      thumb:    null,
+      published: a.timestamp || null,
+      source:   'wikipedia',
+    }));
+  } catch(e) { return []; }
+}
+
+// ── Normalised article card renderer ──────────────────────────
+
+const SOURCE_LABELS = {
+  espn:      '📡 ESPN',
+  guardian:  '🛡 Guardian',
+  wikipedia: '📖 Wikipedia',
+};
+
+function renderNewsArticle(a) {
+  const thumb = a.thumb
+    ? `<img class="news-thumb" src="${a.thumb}" alt="" loading="lazy">`
+    : `<div class="news-thumb-placeholder">📰</div>`;
+  const age    = a.published ? timeAgo(a.published) : '';
+  const source = SOURCE_LABELS[a.source] || '';
+  return `<a class="news-item" href="${a.url}" target="_blank" rel="noopener noreferrer">
+    ${thumb}
+    <div class="news-content">
+      <div class="news-headline">${a.headline}</div>
+      <div class="news-meta">
+        ${age    ? `<span class="news-age">${age}</span>` : ''}
+        ${source ? `<span class="news-source">${source}</span>` : ''}
+      </div>
+    </div>
+  </a>`;
+}
+
+// ── Main entry point ────────────────────────────────────────
+
+async function fetchTeamNews(code) {
+  const panel  = document.getElementById('team-panel');
+  const newsEl = panel?.querySelector('.tpanel-news-body');
+  if (!newsEl) return;
+
+  newsEl.innerHTML = '<div class="news-loading">Loading news…</div>';
+
+  // Fire all three sources in parallel; any failure is silently ignored
+  const [espnRes, guardianRes, wikiRes] = await Promise.allSettled([
+    fetchESPNNews(code),
+    fetchGuardianNews(code),
+    fetchWikipediaNews(code),
+  ]);
+
+  const all = [
+    ...(espnRes.status     === 'fulfilled' ? espnRes.value     : []),
+    ...(guardianRes.status === 'fulfilled' ? guardianRes.value : []),
+    ...(wikiRes.status     === 'fulfilled' ? wikiRes.value     : []),
+  ];
+
+  // Deduplicate by first 40 chars of lowercased headline, sort newest first, cap at 10
+  const seen = new Set();
+  const deduped = all
+    .sort((a, b) => (b.published || '').localeCompare(a.published || ''))
+    .filter(a => {
+      const key = a.headline.toLowerCase().slice(0, 40);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 10);
+
+  if (deduped.length === 0) {
+    newsEl.innerHTML = '<div class="news-empty">No recent news found.</div>';
+    return;
+  }
+
+  newsEl.innerHTML = `<div class="news-list">${deduped.map(renderNewsArticle).join('')}</div>`;
 }
 
 function renderTeamPanel(code) {
