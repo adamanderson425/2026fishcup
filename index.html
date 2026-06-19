@@ -909,7 +909,7 @@ body.arsenal-mode .arsenal-players {
   /* Team panel: float above matches on mobile */
   #content-layout { flex-direction: column; gap: 14px; }
   #matches-col { width: 100%; min-width: 0; }
-  #team-panel { width: 100%; position: static; max-height: none; order: -1; }
+  #team-panel { width: 100%; position: static; max-height: none; }
   #global-news-panel { display: none; }
 
   /* "No matches today" note */
@@ -1748,21 +1748,28 @@ function renderTeamPanel(code) {
 
     ${players.length ? `
     <div class="tpanel-section">
-      <div class="tpanel-section-title">Key Players</div>
-      <div class="players-grid">
-        ${players.map(p => `
-          <div class="player-row">
-            <div>
-              <div class="player-name">${p.name}</div>
-              <div class="player-meta">${p.club}</div>
-            </div>
-            <span class="player-pos">${p.pos}</span>
-          </div>`).join('')}
+      <div class="tpanel-news-toggle" onclick="toggleMobileSection(this)" role="button" aria-expanded="false">
+        <div class="tpanel-section-title" style="margin-bottom:0">Key Players</div>
+        <span class="toggle-chevron">▼</span>
+      </div>
+      <div class="tpanel-news-body-wrap">
+        <div style="padding-top:8px">
+          <div class="players-grid">
+            ${players.map(p => `
+              <div class="player-row">
+                <div>
+                  <div class="player-name">${p.name}</div>
+                  <div class="player-meta">${p.club}</div>
+                </div>
+                <span class="player-pos">${p.pos}</span>
+              </div>`).join('')}
+          </div>
+        </div>
       </div>
     </div>` : ''}
 
     <div class="tpanel-section">
-      <div class="tpanel-news-toggle" onclick="toggleMobileNews(this)" role="button" aria-expanded="false">
+      <div class="tpanel-news-toggle" onclick="toggleMobileSection(this)" role="button" aria-expanded="false">
         <div class="tpanel-section-title" style="margin-bottom:0">Recent News</div>
         <span class="toggle-chevron">▼</span>
       </div>
@@ -2220,19 +2227,20 @@ function renderDateSections(matches) {
 
     const firstSection = past.length === 0;
 
+    // On mobile with no team filter: show only today + collapsible upcoming.
+    // When a team is selected, show everything in full (same as desktop).
     const isMobile = window.innerWidth <= 768;
+    const applyTodaySplit = isMobile && !selectedTeam;
 
-    // Today's matches (always visible on desktop and mobile)
-    if (todayMs.length > 0) {
-      html += renderDateGroups(groupByDate(todayMs), firstSection);
-    } else if (isMobile && futureMs.length > 0) {
-      // No matches today — show a lightweight note on mobile only
-      html += `<div class="mobile-no-today">No matches today</div>`;
-    }
-
-    if (futureMs.length > 0) {
-      if (isMobile) {
-        // Mobile: collapsible <details> — same style as "Previous Matches"
+    if (applyTodaySplit) {
+      // Today's matches
+      if (todayMs.length > 0) {
+        html += renderDateGroups(groupByDate(todayMs), firstSection);
+      } else if (futureMs.length > 0) {
+        html += `<div class="mobile-no-today">No matches today</div>`;
+      }
+      // Upcoming: collapsible details
+      if (futureMs.length > 0) {
         html += `
           <details class="past-section upcoming-details">
             <summary class="past-summary">
@@ -2245,10 +2253,10 @@ function renderDateSections(matches) {
               ${renderDateGroups(groupByDate(futureMs), false)}
             </div>
           </details>`;
-      } else {
-        // Desktop: show future matches inline as normal
-        html += renderDateGroups(groupByDate(futureMs), firstSection && todayMs.length === 0);
       }
+    } else {
+      // Desktop, or mobile with a team selected: show all active matches inline
+      html += renderDateGroups(groupByDate(active), firstSection);
     }
   }
 
@@ -2367,7 +2375,7 @@ function mobileSelectTeam(code) {
   render();
 }
 
-function toggleMobileNews(toggleEl) {
+function toggleMobileSection(toggleEl) {
   // Only toggle on mobile; on desktop the wrap has no max-height constraint
   if (window.innerWidth > 768) return;
   const wrap = toggleEl.closest('.tpanel-section').querySelector('.tpanel-news-body-wrap');
@@ -2376,6 +2384,8 @@ function toggleMobileNews(toggleEl) {
   toggleEl.classList.toggle('open', isOpen);
   toggleEl.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
+// Alias kept for any legacy calls
+const toggleMobileNews = toggleMobileSection;
 
 // ═══════════════════════════════════════════════════════
 // PILL AUTO-SCROLL
