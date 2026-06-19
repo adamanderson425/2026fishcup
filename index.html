@@ -1396,6 +1396,39 @@ async function fetchGuardianWCNews() {
   } catch(e) { return []; }
 }
 
+// ── Shared general WC feed cache (ESPN + Guardian, no team filter) ──
+// Fetched once; reused by global sidebar AND team panel filtering.
+let _wcFeedCache = null;
+let _wcFeedPromise = null;
+
+async function getWCFeed() {
+  if (_wcFeedCache) return _wcFeedCache;
+  if (_wcFeedPromise) return _wcFeedPromise; // deduplicate concurrent calls
+  _wcFeedPromise = (async () => {
+    const [espnRes, guardianRes] = await Promise.allSettled([
+      (async () => {
+        const r = await fetch(
+          'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=40',
+          { signal: AbortSignal.timeout(7000) }
+        );
+        if (!r.ok) return [];
+        const d = await r.json();
+        return (d.articles || []).map(a => ({
+          headline: a.headline, url: a.links?.web?.href || '#',
+          thumb: a.images?.[0]?.url || null, published: a.published || null, source: 'espn',
+        }));
+      })(),
+      fetchGuardianWCNews(),
+    ]);
+    _wcFeedCache = [
+      ...(espnRes.status     === 'fulfilled' ? espnRes.value     : []),
+      ...(guardianRes.status === 'fulfilled' ? guardianRes.value : []),
+    ];
+    return _wcFeedCache;
+  })();
+  return _wcFeedPromise;
+}
+
 // ── Normalised article card renderer ──────────────────────────
 
 const SOURCE_LABELS = {
@@ -1444,15 +1477,26 @@ async function fetchTeamNews(code) {
 
   newsEl.innerHTML = '<div class="news-loading">Loading news…</div>';
 
-  // ESPN + Guardian only (both filtered to team-specific articles)
-  const [espnRes, guardianRes] = await Promise.allSettled([
+  const teamName = (TEAM_FULL_NAME[code] || FAMILY[code]?.name || code).toLowerCase();
+
+  // Three sources in parallel:
+  // 1) ESPN team-specific endpoint
+  // 2) Guardian team-specific query (headline must include team name)
+  // 3) General WC feed (cached) filtered to articles that name the team in headline
+  const [espnRes, guardianRes, wcFeedRes] = await Promise.allSettled([
     fetchESPNNews(code),
     fetchGuardianNews(code),
+    getWCFeed(),
   ]);
+
+  const fromFeed = wcFeedRes.status === 'fulfilled'
+    ? wcFeedRes.value.filter(a => a.headline.toLowerCase().includes(teamName))
+    : [];
 
   const deduped = mergeAndRender([
     espnRes.status     === 'fulfilled' ? espnRes.value     : [],
     guardianRes.status === 'fulfilled' ? guardianRes.value : [],
+    fromFeed,
   ]);
 
   if (deduped.length === 0) {
@@ -1466,27 +1510,8 @@ async function fetchGlobalNews() {
   const el = document.getElementById('global-news-body');
   if (!el) return;
 
-  // ESPN general WC feed + Guardian general WC feed
-  const [espnRes, guardianRes] = await Promise.allSettled([
-    (async () => {
-      const r = await fetch(
-        'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=15',
-        { signal: AbortSignal.timeout(7000) }
-      );
-      if (!r.ok) return [];
-      const d = await r.json();
-      return (d.articles || []).map(a => ({
-        headline: a.headline, url: a.links?.web?.href || '#',
-        thumb: a.images?.[0]?.url || null, published: a.published || null, source: 'espn',
-      }));
-    })(),
-    fetchGuardianWCNews(),
-  ]);
-
-  const deduped = mergeAndRender([
-    espnRes.status     === 'fulfilled' ? espnRes.value     : [],
-    guardianRes.status === 'fulfilled' ? guardianRes.value : [],
-  ], 15);
+  const feed = await getWCFeed().catch(() => []);
+  const deduped = mergeAndRender([feed], 15);
 
   if (deduped.length === 0) {
     el.innerHTML = '<div class="news-empty">No news found.</div>';
