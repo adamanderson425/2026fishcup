@@ -809,9 +809,8 @@ body.arsenal-mode .arsenal-players {
 .toggle-chevron { display: none; }
 .tpanel-news-body-wrap { display: block; }
 
-/* Mobile upcoming-section button — hidden on desktop */
-.mobile-upcoming-btn { display: none; }
-.mobile-no-today     { display: none; }
+/* "No matches today" note — hidden on desktop */
+.mobile-no-today { display: none; }
 
 @media (max-width: 768px) {
 
@@ -906,37 +905,7 @@ body.arsenal-mode .arsenal-players {
   #team-panel { width: 100%; position: static; max-height: none; order: -1; }
   #global-news-panel { display: none; }
 
-  /* Today-only view: hide upcoming section by default; show via button */
-  .upcoming-section { display: none; }
-  .upcoming-section.open { display: block; }
-
-  .mobile-upcoming-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    margin: 14px 0 4px;
-    padding: 13px 16px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 48px;
-    transition: background 0.18s, border-color 0.18s;
-  }
-  .mobile-upcoming-btn:hover { background: var(--surface2); border-color: var(--accent); }
-  .upcoming-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--accent); color: #fff;
-    font-size: 12px; font-weight: 700;
-    padding: 2px 8px; border-radius: 999px;
-    min-width: 24px;
-  }
-
+  /* "No matches today" note */
   .mobile-no-today {
     display: block;
     text-align: center;
@@ -2244,25 +2213,35 @@ function renderDateSections(matches) {
 
     const firstSection = past.length === 0;
 
+    const isMobile = window.innerWidth <= 768;
+
     // Today's matches (always visible on desktop and mobile)
     if (todayMs.length > 0) {
       html += renderDateGroups(groupByDate(todayMs), firstSection);
-    } else if (futureMs.length > 0) {
+    } else if (isMobile && futureMs.length > 0) {
       // No matches today — show a lightweight note on mobile only
       html += `<div class="mobile-no-today">No matches today</div>`;
     }
 
-    // Future matches — hidden on mobile by default; revealed by button tap
     if (futureMs.length > 0) {
-      html += `
-        <div class="upcoming-section" id="upcoming-section">
-          ${renderDateGroups(groupByDate(futureMs), firstSection && todayMs.length === 0)}
-        </div>
-        <button class="mobile-upcoming-btn" id="upcoming-toggle-btn"
-          onclick="showMobileUpcoming(this)">
-          <span>Upcoming matches</span>
-          <span class="upcoming-count">${futureMs.length}</span>
-        </button>`;
+      if (isMobile) {
+        // Mobile: collapsible <details> — same style as "Previous Matches"
+        html += `
+          <details class="past-section upcoming-details">
+            <summary class="past-summary">
+              <span class="past-toggle-icon">▶</span>
+              Upcoming Matches
+              <span class="past-count">${futureMs.length}</span>
+              <span class="past-summary-line"></span>
+            </summary>
+            <div class="past-grid-wrapper">
+              ${renderDateGroups(groupByDate(futureMs), false)}
+            </div>
+          </details>`;
+      } else {
+        // Desktop: show future matches inline as normal
+        html += renderDateGroups(groupByDate(futureMs), firstSection && todayMs.length === 0);
+      }
     }
   }
 
@@ -2379,12 +2358,6 @@ function mobileSelectTeam(code) {
   renderTeamPills(); // also calls syncMobileSelect
   renderTeamPanel(selectedTeam);
   render();
-}
-
-function showMobileUpcoming(btn) {
-  const sec = document.getElementById('upcoming-section');
-  if (sec) sec.classList.add('open');
-  btn.style.display = 'none';
 }
 
 function toggleMobileNews(toggleEl) {
