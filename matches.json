@@ -86,46 +86,46 @@
   ],
   "knockout": {
     "r32": [
-      {"id":73, "home":"1F",  "away":"2C",     "date":"Sun Jun 29","time":"3:00pm", "venue":"Houston"},
-      {"id":74, "home":"1E",  "away":"3ABCDF", "date":"Sun Jun 29","time":"4:30pm", "venue":"Boston"},
-      {"id":75, "home":"1C",  "away":"2F",     "date":"Mon Jun 30","time":"9:00pm", "venue":"Philadelphia"},
-      {"id":76, "home":"2E",  "away":"2I",     "date":"Mon Jun 30","time":"1:00pm", "venue":"New York/NJ"},
-      {"id":77, "home":"1I",  "away":"3CDFGH", "date":"Mon Jun 30","time":"5:00pm", "venue":"Seattle"},
-      {"id":78, "home":"1J",  "away":"2H",     "date":"Tue Jul 1", "time":"1:00pm", "venue":"San Francisco"},
-      {"id":79, "home":"1A",  "away":"3CEFHI", "date":"Tue Jul 1", "time":"9:00pm", "venue":"Mexico City"},
-      {"id":80, "home":"1L",  "away":"3EHIJK", "date":"Tue Jul 1", "time":"12:00pm","venue":"Kansas City"},
-      {"id":81, "home":"1D",  "away":"3BEFIJ", "date":"Wed Jul 2", "time":"8:00pm", "venue":"Dallas"},
-      {"id":82, "home":"1G",  "away":"3AEHIJ", "date":"Wed Jul 2", "time":"4:00pm", "venue":"Seattle"},
-      {"id":83, "home":"2K",  "away":"2L",     "date":"Wed Jul 2", "time":"7:00pm", "venue":"Toronto"},
-      {"id":84, "home":"1H",  "away":"2J",     "date":"Wed Jul 2", "time":"3:00pm", "venue":"Miami"},
-      {"id":85, "home":"1B",  "away":"3EFGIJ", "date":"Thu Jul 3", "time":"11:00pm","venue":"Vancouver"},
-      {"id":86, "home":"1K",  "away":"3DEIJL", "date":"Thu Jul 3", "time":"6:00pm", "venue":"Kansas City"},
-      {"id":87, "home":"2A",  "away":"2B",     "date":"Sun Jun 29","time":"3:00pm", "venue":"Los Angeles"},
-      {"id":88, "home":"2D",  "away":"2G",     "date":"Thu Jul 3", "time":"2:00pm", "venue":"Atlanta"}
+      {"id":73, "home":"RSA","away":"CAN","date":"Sun Jun 29","time":"3:00pm", "venue":"Los Angeles"},
+      {"id":74, "home":"GER","away":"PAR","date":"Mon Jun 30","time":"4:30pm", "venue":"Boston"},
+      {"id":75, "home":"NED","away":"MAR","date":"Mon Jun 30","time":"9:00pm", "venue":"Monterrey"},
+      {"id":76, "home":"BRA","away":"JPN","date":"Mon Jun 30","time":"1:00pm", "venue":"Houston"},
+      {"id":77, "home":"FRA","away":"SWE","date":"Tue Jul 1", "time":"5:00pm", "venue":"New York/NJ"},
+      {"id":78, "home":"CIV","away":"NOR","date":"Tue Jul 1", "time":"1:00pm", "venue":"Dallas"},
+      {"id":79, "home":"MEX","away":"ECU","date":"Tue Jul 1", "time":"9:00pm", "venue":"Mexico City"},
+      {"id":80, "home":"ENG","away":"COD","date":"Wed Jul 2", "time":"12:00pm","venue":"Atlanta"},
+      {"id":81, "home":"USA","away":"BIH","date":"Wed Jul 2", "time":"8:00pm", "venue":"San Francisco"},
+      {"id":82, "home":"BEL","away":"SEN","date":"Wed Jul 2", "time":"4:00pm", "venue":"Seattle"},
+      {"id":83, "home":"POR","away":"CRO","date":"Thu Jul 3", "time":"7:00pm", "venue":"Toronto"},
+      {"id":84, "home":"ESP","away":"AUT","date":"Thu Jul 3", "time":"3:00pm", "venue":"Los Angeles"},
+      {"id":85, "home":"SUI","away":"ALG","date":"Thu Jul 3", "time":"11:00pm","venue":"Vancouver"},
+      {"id":86, "home":"ARG","away":"CPV","date":"Fri Jul 4", "time":"6:00pm", "venue":"Miami"},
+      {"id":87, "home":"COL","away":"GHA","date":"Fri Jul 4", "time":"9:30pm", "venue":"Kansas City"},
+      {"id":88, "home":"AUS","away":"EGY","date":"Fri Jul 4", "time":"2:00pm", "venue":"Dallas"}
     ],
     "r16": [
-      {"id":89, "home":"W74","away":"W77","date":"Sun Jul 5", "time":"5:00pm", "venue":"TBD"},
-      {"id":90, "home":"W73","away":"W75","date":"Mon Jul 7", "time":"1:00pm", "venue":"TBD"},
-      {"id":91, "home":"W76","away":"W78","date":"Mon Jul 7", "time":"4:00pm", "venue":"TBD"},
-      {"id":92, "home":"W79","away":"W80","date":"Tue Jul 8", "time":"8:00pm", "venue":"TBD"},
-      {"id":93, "home":"W83","away":"W84","date":"Tue Jul 7", "time":"3:00pm", "venue":"TBD"},
-      {"id":94, "home":"W85","away":"W87","date":"Tue Jul 8", "time":"8:00pm", "venue":"TBD"},
-      {"id":95, "home":"W81","away":"W82","date":"Wed Jul 9", "time":"12:00pm","venue":"TBD"},
-      {"id":96, "home":"W86","away":"W88","date":"Wed Jul 9", "time":"4:00pm", "venue":"TBD"}
+      {"id":89, "home":"W74","away":"W77","date":"Sat Jul 5", "time":"5:00pm", "venue":"Philadelphia", "possible":["GER","PAR","FRA","SWE"]},
+      {"id":90, "home":"W73","away":"W75","date":"Sat Jul 5", "time":"1:00pm", "venue":"Houston",      "possible":["RSA","CAN","NED","MAR"]},
+      {"id":91, "home":"W76","away":"W78","date":"Sun Jul 6", "time":"4:00pm", "venue":"New York/NJ",  "possible":["BRA","JPN","CIV","NOR"]},
+      {"id":92, "home":"W79","away":"W80","date":"Sun Jul 6", "time":"8:00pm", "venue":"Mexico City",  "possible":["MEX","ECU","ENG","COD"]},
+      {"id":93, "home":"W83","away":"W84","date":"Mon Jul 7", "time":"3:00pm", "venue":"Dallas",       "possible":["POR","CRO","ESP","AUT"]},
+      {"id":94, "home":"W81","away":"W82","date":"Mon Jul 7", "time":"8:00pm", "venue":"Seattle",      "possible":["USA","BIH","BEL","SEN"]},
+      {"id":95, "home":"W86","away":"W88","date":"Tue Jul 8", "time":"12:00pm","venue":"Atlanta",      "possible":["ARG","CPV","AUS","EGY"]},
+      {"id":96, "home":"W85","away":"W87","date":"Tue Jul 8", "time":"4:00pm", "venue":"Vancouver",    "possible":["SUI","ALG","COL","GHA"]}
     ],
     "qf": [
-      {"id":97, "home":"W89","away":"W90","date":"Sat Jul 11","time":"4:00pm","venue":"TBD"},
-      {"id":98, "home":"W95","away":"W96","date":"Sat Jul 12","time":"3:00pm","venue":"TBD"},
-      {"id":99, "home":"W91","away":"W92","date":"Sun Jul 13","time":"5:00pm","venue":"TBD"},
-      {"id":100,"home":"W93","away":"W94","date":"Sun Jul 14","time":"9:00pm","venue":"TBD"}
+      {"id":97, "home":"W89","away":"W90","date":"Thu Jul 10","time":"4:00pm","venue":"Boston",       "possible":["GER","PAR","FRA","SWE","RSA","CAN","NED","MAR"]},
+      {"id":98, "home":"W93","away":"W94","date":"Fri Jul 11","time":"3:00pm","venue":"Los Angeles",  "possible":["POR","CRO","ESP","AUT","USA","BIH","BEL","SEN"]},
+      {"id":99, "home":"W91","away":"W92","date":"Sun Jul 12","time":"5:00pm","venue":"Miami",        "possible":["BRA","JPN","CIV","NOR","MEX","ECU","ENG","COD"]},
+      {"id":100,"home":"W95","away":"W96","date":"Sun Jul 12","time":"9:00pm","venue":"Kansas City",  "possible":["ARG","CPV","AUS","EGY","SUI","ALG","COL","GHA"]}
     ],
     "sf": [
-      {"id":101,"home":"W97", "away":"W98", "date":"Wed Jul 15","time":"3:00pm","venue":"TBD"},
-      {"id":102,"home":"W99", "away":"W100","date":"Thu Jul 16","time":"3:00pm","venue":"TBD"}
+      {"id":101,"home":"W97","away":"W98", "date":"Wed Jul 15","time":"3:00pm","venue":"Dallas",  "possible":["GER","PAR","FRA","SWE","RSA","CAN","NED","MAR","POR","CRO","ESP","AUT","USA","BIH","BEL","SEN"]},
+      {"id":102,"home":"W99","away":"W100","date":"Thu Jul 16","time":"3:00pm","venue":"Atlanta", "possible":["BRA","JPN","CIV","NOR","MEX","ECU","ENG","COD","ARG","CPV","AUS","EGY","SUI","ALG","COL","GHA"]}
     ],
     "final": [
-      {"id":104,"home":"L101","away":"L102","date":"Sat Jul 18","time":"3:00pm","venue":"Miami (Bronze Final)"},
-      {"id":103,"home":"W101","away":"W102","date":"Sun Jul 19","time":"5:00pm","venue":"New York/NJ (Final)"}
+      {"id":103,"home":"L101","away":"L102","date":"Sun Jul 19","time":"5:00pm","venue":"Miami (Bronze Final)"},
+      {"id":104,"home":"W101","away":"W102","date":"Mon Jul 20","time":"3:00pm","venue":"New York/NJ (Final)"}
     ]
   }
 }

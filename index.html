@@ -344,6 +344,18 @@ details[open] .past-toggle-icon { transform: rotate(90deg); }
 .score-sep { font-size: 16px; color: var(--border2); }
 .score.win { color: #6ee7b7; }
 
+/* POSSIBLY PLAYING */
+.match-card.possible {
+  border-color: rgba(59,130,246,0.45);
+  border-style: dashed;
+}
+.possible-footer {
+  margin-top: 10px; padding-top: 8px;
+  border-top: 1px dashed rgba(59,130,246,0.25);
+  font-size: 11px; color: var(--accent2);
+  font-weight: 500; opacity: 0.85;
+}
+
 /* CLASH FOOTER */
 .clash-footer {
   margin-top: 10px; padding-top: 8px;
@@ -1343,7 +1355,7 @@ const DATE_ISO = {
   "Thu Jul 10":"2026-07-09","Fri Jul 11":"2026-07-10","Sat Jul 11":"2026-07-10",
   "Sun Jul 12":"2026-07-11","Mon Jul 13":"2026-07-12","Tue Jul 14":"2026-07-13",
   "Wed Jul 15":"2026-07-14","Thu Jul 16":"2026-07-15",
-  "Sat Jul 18":"2026-07-17","Sun Jul 19":"2026-07-18",
+  "Sat Jul 18":"2026-07-17","Sun Jul 19":"2026-07-18","Mon Jul 20":"2026-07-19",
 };
 
 // Convert "HH:MM" 24h → "H:MMam/pm" ET
@@ -2006,12 +2018,21 @@ function parseESPN(events) {
 function isFamilyTeam(code) { return !!FAMILY[code]; }
 function isKnockoutPlaceholder(code) { return /^[W12L3]/.test(code); }
 
+function isPossibleMatch(m) {
+  if (!m.possible?.length) return false;
+  if (selectedTeam) return m.possible.includes(selectedTeam);
+  if (viewMode === 'family') return m.possible.some(code => isFamilyTeam(code));
+  return false;
+}
+
 function matchPassesFilter(m) {
   if (arsenalMode)  return !!ARSENAL_MATCHES[m.id];
   if (spursMode)    return !!SPURS_MATCHES[m.id];
   if (chelseaMode)  return !!CHELSEA_MATCHES[m.id];
-  if (selectedTeam) return m.home === selectedTeam || m.away === selectedTeam;
-  if (viewMode === 'family') return isFamilyTeam(m.home) || isFamilyTeam(m.away);
+  if (selectedTeam) return m.home === selectedTeam || m.away === selectedTeam
+                        || m.possible?.includes(selectedTeam);
+  if (viewMode === 'family') return isFamilyTeam(m.home) || isFamilyTeam(m.away)
+                              || m.possible?.some(code => isFamilyTeam(code));
   return true;
 }
 
@@ -2110,6 +2131,7 @@ function renderMatchCard(m) {
   const s = scores[m.id];
   const homeWin = s?.homeWin ?? (s && s.home > s.away);
   const awayWin = s?.awayWin ?? (s && s.away > s.home);
+  const possible = !clash && isPossibleMatch(m);
 
   // Link any match ESPN knows about — past recap OR upcoming preview
   const espnUrl = s?.espnId
@@ -2117,10 +2139,11 @@ function renderMatchCard(m) {
     : null;
 
   const classes = ['match-card',
-    clash   && 'clash',
-    played  && 'played',
-    live    && 'live',
-    espnUrl && 'clickable',
+    clash    && 'clash',
+    possible && 'possible',
+    played   && 'played',
+    live     && 'live',
+    espnUrl  && 'clickable',
   ].filter(Boolean).join(' ');
 
   const groupTag = m.g
@@ -2130,6 +2153,16 @@ function renderMatchCard(m) {
   const clashFooter = clash
     ? `<div class="clash-footer">⚔ ${FAMILY[m.home].person} vs ${FAMILY[m.away].person}</div>`
     : '';
+
+  let possibleFooter = '';
+  if (possible) {
+    if (selectedTeam) {
+      possibleFooter = `<div class="possible-footer">👀 ${FAMILY[selectedTeam]?.name || selectedTeam} may play here</div>`;
+    } else {
+      const names = (m.possible || []).filter(isFamilyTeam).map(c => FAMILY[c].person);
+      possibleFooter = `<div class="possible-footer">👀 ${names.join(' · ')} may play here</div>`;
+    }
+  }
 
   // Arsenal player badges — only shown when Arsenal Mode is active
   const arsenalData = ARSENAL_MATCHES[m.id];
@@ -2205,7 +2238,7 @@ function renderMatchCard(m) {
       ${renderScoreBlock(m.id)}
       ${renderTeamBlock(m.away, 'away', played && awayWin)}
     </div>
-    ${clashFooter}${arsenalFooter}${spursFooter}${chelseaFooter}
+    ${clashFooter}${possibleFooter}${arsenalFooter}${spursFooter}${chelseaFooter}
   </div>`;
 
   // Wrap finished cards in a link; upcoming/live cards are plain divs
@@ -2354,12 +2387,19 @@ function renderKnockout() {
     m => !isKnockoutPlaceholder(m.home) || !isKnockoutPlaceholder(m.away)
   );
 
+  const bracketPending = `<div class="bracket-notice">
+    <strong>🔒 ${phaseName} — bracket pending</strong>
+    Teams will be confirmed once prior rounds conclude. Check back soon.
+  </div>`;
+
   let html;
   if (!anyResolved) {
-    html = `<div class="bracket-notice">
-      <strong>🔒 ${phaseName} — bracket pending</strong>
-      Teams will be confirmed once prior rounds conclude. Check back soon.
-    </div>`;
+    // Bracket not set yet — but in family/team view, show possible matches
+    const inFamilyContext = selectedTeam || viewMode === 'family';
+    const possibleFiltered = inFamilyContext ? phaseMatches.filter(matchPassesFilter) : [];
+    html = possibleFiltered.length > 0
+      ? renderDateSections(possibleFiltered)
+      : bracketPending;
   } else {
     const filtered = phaseMatches.filter(matchPassesFilter);
     if (filtered.length === 0) {
