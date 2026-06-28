@@ -824,6 +824,9 @@ body.arsenal-mode .arsenal-players {
 /* "No matches today" note — hidden on desktop */
 .mobile-no-today { display: none; }
 
+/* Hide phase tabs on ALL screen sizes when a team is selected */
+body.team-selected .phase-tabs { display: none; }
+
 /* Mobile team badge — hidden on desktop */
 #mobile-team-badge { display: none; }
 
@@ -946,8 +949,7 @@ body.arsenal-mode .arsenal-players {
   .mobile-badge-name  { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
   .mobile-badge-picker { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 2px; }
 
-  /* Hide phase tabs when a team is selected on mobile */
-  body.team-selected .phase-tabs { display: none; }
+  /* (phase tabs hidden on all screen sizes when team selected — rule lives outside @media) */
 
   /* "No matches today" note */
   .mobile-no-today {
@@ -1426,7 +1428,7 @@ let GROUP_MATCHES   = [];
 let KNOCKOUT_MATCHES = {};
 let scores          = {};
 let viewMode        = 'all';
-let activePhase     = 'group';
+let activePhase     = 'r32';
 let selectedTeam    = null;
 let arsenalMode     = false;
 let spursMode       = false;
@@ -2252,11 +2254,63 @@ function renderMatchCard(m) {
 // ═══════════════════════════════════════════════════════
 
 function render() {
-  if (activePhase === 'group') {
+  if (selectedTeam) {
+    renderTeamView();
+  } else if (activePhase === 'group') {
     renderGroupStage();
   } else {
     renderKnockout();
   }
+}
+
+// ── Unified team view: all rounds, past collapsible + upcoming/possible inline ──
+function renderTeamView() {
+  document.getElementById('group-view').style.display = '';
+  document.getElementById('knockout-view').style.display = 'none';
+
+  const code = selectedTeam;
+  const allKnockout = Object.values(KNOCKOUT_MATCHES).flat();
+  const allMatches  = [...GROUP_MATCHES, ...allKnockout]
+    .sort((a, b) => matchSortKey(a).localeCompare(matchSortKey(b)));
+
+  // Direct team matches + possible bracket slots
+  const teamMatches = allMatches.filter(m =>
+    m.home === code || m.away === code || m.possible?.includes(code)
+  );
+
+  if (teamMatches.length === 0) {
+    document.getElementById('group-view').innerHTML =
+      `<div class="empty-state"><div class="big">⚽</div>
+       <p>No matches found for ${FAMILY[code]?.name || code}.</p></div>`;
+    return;
+  }
+
+  const past    = teamMatches.filter(m =>  isMatchPast(m));
+  const upcoming = teamMatches.filter(m => !isMatchPast(m));
+  let html = '';
+
+  // Previous matches: collapsible, newest-first
+  if (past.length > 0) {
+    const byDate   = groupByDate(past);
+    const reversed = Object.fromEntries(Object.entries(byDate).reverse());
+    html += `
+      <details class="past-section" style="margin-top:0">
+        <summary class="past-summary">
+          <span class="past-toggle-icon">▶</span>
+          Previous Matches
+          <span class="past-count">${past.length}</span>
+          <span class="past-summary-line"></span>
+        </summary>
+        <div class="past-grid-wrapper">${renderDateGroups(reversed, false)}</div>
+      </details>`;
+  }
+
+  // Upcoming + possible matches: chronological, all in one stream
+  if (upcoming.length > 0) {
+    html += renderDateGroups(groupByDate(upcoming), past.length === 0);
+  }
+
+  document.getElementById('group-view').innerHTML = html;
 }
 
 function groupByDate(matches) {
@@ -2367,6 +2421,11 @@ function renderGroupStage() {
       ? `No group stage matches found for ${FAMILY[selectedTeam]?.name || selectedTeam}.`
       : `No family matches in the group stage — try "All matches".`;
     html = `<div class="empty-state"><div class="big">⚽</div><p>${label}</p></div>`;
+  } else if (filtered.every(m => isMatchPast(m))) {
+    // All group stage matches are past — show newest-first with no collapsible
+    const byDate = groupByDate(filtered);
+    const reversed = Object.fromEntries(Object.entries(byDate).reverse());
+    html = renderDateGroups(reversed, true);
   } else {
     html = renderDateSections(filtered);
   }
@@ -2392,14 +2451,14 @@ function renderKnockout() {
     Teams will be confirmed once prior rounds conclude. Check back soon.
   </div>`;
 
+  // R16 and QF always show possible matchups (not just in family/team view)
+  const alwaysShowPossible = ['r16', 'qf'].includes(activePhase);
+
   let html;
   if (!anyResolved) {
-    // Bracket not set yet — but in family/team view, show possible matches
-    const inFamilyContext = selectedTeam || viewMode === 'family';
-    const possibleFiltered = inFamilyContext ? phaseMatches.filter(matchPassesFilter) : [];
-    html = possibleFiltered.length > 0
-      ? renderDateSections(possibleFiltered)
-      : bracketPending;
+    const shouldShow = alwaysShowPossible || selectedTeam || viewMode === 'family';
+    const filtered = shouldShow ? phaseMatches.filter(matchPassesFilter) : [];
+    html = filtered.length > 0 ? renderDateSections(filtered) : bracketPending;
   } else {
     const filtered = phaseMatches.filter(matchPassesFilter);
     if (filtered.length === 0) {
