@@ -1426,6 +1426,7 @@ function matchSortKey(m) {
 
 let GROUP_MATCHES   = [];
 let KNOCKOUT_MATCHES = {};
+let KNOCKOUT_ORIGINAL = null;
 let scores          = {};
 let viewMode        = 'all';
 let activePhase     = 'r32';
@@ -1466,7 +1467,49 @@ async function loadMatchData() {
   const data = await res.json();
   GROUP_MATCHES = data.group;
   KNOCKOUT_MATCHES = data.knockout;
+  KNOCKOUT_ORIGINAL = JSON.parse(JSON.stringify(data.knockout));
   GROUP_MATCHES.sort((a, b) => matchSortKey(a).localeCompare(matchSortKey(b)));
+}
+
+// Recursively resolve a W/L placeholder code using finished match scores.
+function resolveTeamCode(code) {
+  if (!/^[WL]\d+$/.test(code)) return code; // already a real team code
+  if (!KNOCKOUT_ORIGINAL) return code; // data not loaded yet
+  const prefix = code[0];
+  const matchId = parseInt(code.slice(1), 10);
+  // Find the source match in the original (unresolved) bracket
+  let match = null;
+  for (const round of Object.values(KNOCKOUT_ORIGINAL)) {
+    match = round.find(m => m.id === matchId);
+    if (match) break;
+  }
+  if (!match) return code;
+  // Recursively resolve both sides first
+  const homeCode = resolveTeamCode(match.home);
+  const awayCode = resolveTeamCode(match.away);
+  // Check if this match has a final score
+  const s = scores[matchId];
+  if (!s || s.status !== 'ft') return code; // not finished yet — keep placeholder
+  const homeWon = s.homeWin != null ? s.homeWin : (s.home > s.away);
+  return prefix === 'W'
+    ? (homeWon ? homeCode : awayCode)
+    : (homeWon ? awayCode : homeCode);
+}
+
+// Rebuild KNOCKOUT_MATCHES from KNOCKOUT_ORIGINAL, resolving any W/L placeholders
+// whose source matches now have a final score.
+function resolveKnockoutBracket() {
+  if (!KNOCKOUT_ORIGINAL) return;
+  Object.keys(KNOCKOUT_ORIGINAL).forEach(round => {
+    KNOCKOUT_MATCHES[round] = KNOCKOUT_ORIGINAL[round].map(m => {
+      const home = resolveTeamCode(m.home);
+      const away = resolveTeamCode(m.away);
+      if (home !== m.home || away !== m.away) {
+        console.log('[resolveKnockoutBracket]', round, 'match', m.id, m.home, '→', home, '/', m.away, '→', away);
+      }
+      return { ...m, home, away };
+    });
+  });
 }
 
 async function loadScoreOverrides() {
@@ -1873,15 +1916,19 @@ async function fetchScores() {
   } catch(e) {}
 
   try {
-    // Fetch today AND yesterday in ET so matches that finished late yesterday
-    // remain marked FT after midnight. ESPN uses ?dates=YYYYMMDD.
+    // Fetch today + enough historical days to cover all finished knockout matches.
+    // ESPN uses ?dates=YYYYMMDD. We look back 5 days to reach back to the first
+    // R32 games (Jun 28) even when the current date is Jul 2+.
     const fmtDate = d => new Date(d - 4 * 60 * 60 * 1000).toISOString().slice(0,10).replace(/-/g,'');
-    const todayStr = fmtDate(Date.now());
-    const yesterdayStr = fmtDate(Date.now() - 86400000);
+    const dateStrings = [];
+    for (let i = 0; i <= 5; i++) {
+      dateStrings.push(fmtDate(Date.now() - i * 86400000));
+    }
+    // Deduplicate (shouldn't overlap, but just in case)
+    const uniqueDates = [...new Set(dateStrings)];
 
     const scoreboardUrls = [
-      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${todayStr}`,
-      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${yesterdayStr}`,
+      ...uniqueDates.map(d => `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${d}`),
       'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard', // undated fallback
     ];
 
@@ -1909,6 +1956,7 @@ async function fetchScores() {
   });
 
   saveScores(); // persist so yesterday's FT results survive a page reload
+  resolveKnockoutBracket(); // update bracket with any newly finished matches
 
   document.getElementById('last-updated').textContent =
     'Last updated: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1954,7 +2002,10 @@ function parseESPN(events) {
     const match = allMatches.find(m =>
       (m.home === hCode && m.away === aCode) || (m.home === aCode && m.away === hCode)
     );
-    if (!match) return;
+    if (!match) {
+      console.warn('[parseESPN] no match found for', hCode, 'vs', aCode, '— event', ev.id);
+      return;
+    }
     const flipped = match.away === hCode;
 
     // Map to our three-state model
@@ -2000,7 +2051,7 @@ function parseESPN(events) {
       espnTime = `${h12}:${mm}${ampm}`;
     }
 
-    scores[match.id] = {
+    const entry = {
       home:    flipped ? aScore : hScore,
       away:    flipped ? hScore : aScore,
       homeWin: flipped ? awayComp.winner : homeComp.winner,
@@ -2008,8 +2059,10 @@ function parseESPN(events) {
       status,
       clock,
       espnId:  ev.id,
-      espnTime,            // authoritative kickoff time straight from ESPN
+      espnTime,
     };
+    console.log('[parseESPN] storing scores[' + match.id + ']', hCode, entry.home, ':', entry.away, aCode, '→', status, 'homeWin:', entry.homeWin);
+    scores[match.id] = entry;
   });
 }
 
@@ -2129,6 +2182,11 @@ function renderTeamBlock(code, side, isWinner) {
 }
 
 function renderMatchCard(m) {
+  // Resolve any W/L placeholder codes (e.g. "W74" → "PAR") using current scores.
+  // This is a belt-and-suspenders fallback in case resolveKnockoutBracket hasn't
+  // yet updated KNOCKOUT_MATCHES for this match object.
+  m = { ...m, home: resolveTeamCode(m.home), away: resolveTeamCode(m.away) };
+
   const { played, live, clash, displayTime } = deriveMatchState(m);
   const s = scores[m.id];
   const homeWin = s?.homeWin ?? (s && s.home > s.away);
@@ -2136,9 +2194,16 @@ function renderMatchCard(m) {
   const possible = !clash && isPossibleMatch(m);
 
   // Link any match ESPN knows about — past recap OR upcoming preview
-  const espnUrl = s?.espnId
-    ? `https://www.espn.com/soccer/match/_/gameId/${s.espnId}`
-    : null;
+  // Link to ESPN: use direct gameId when ESPN has tracked the event,
+  // otherwise link to ESPN search for the matchup once teams are known.
+  const isPlaceholder = code => /^[WL]\d+$/.test(code);
+  let espnUrl = null;
+  if (s?.espnId) {
+    espnUrl = `https://www.espn.com/soccer/match/_/gameId/${s.espnId}`;
+  } else if (!isPlaceholder(m.home) && !isPlaceholder(m.away)) {
+    // Teams are known but ESPN hasn't assigned an event ID yet — link to ESPN WC page
+    espnUrl = `https://www.espn.com/soccer/scoreboard/_/league/FIFA.WORLD`;
+  }
 
   const classes = ['match-card',
     clash    && 'clash',
@@ -2254,6 +2319,7 @@ function renderMatchCard(m) {
 // ═══════════════════════════════════════════════════════
 
 function render() {
+  resolveKnockoutBracket(); // always re-resolve with latest scores before any render
   if (selectedTeam) {
     renderTeamView();
   } else if (activePhase === 'group') {
@@ -2797,6 +2863,7 @@ function applyPersistedState() {
     return;
   }
   loadCachedScores(); // baseline from previous session; API data will overwrite
+  resolveKnockoutBracket(); // apply cached scores to bracket placeholders
   document.getElementById('loading-overlay').style.display = 'none';
   applyPersistedState();
   initMobileTeamSelect();

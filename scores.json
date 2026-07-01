@@ -1,5 +1,9 @@
 {
   "_comment": "Manual score overrides. Keys are match IDs (as strings). Status: 'ft' | 'live' | 'sched'. These merge on top of ESPN API results, so you can correct wrong scores or fill gaps when the API returns nothing.",
   "overrides": {
+    "73": { "home": 0, "away": 1, "homeWin": false, "awayWin": true,  "status": "ft", "_note": "RSA 0-1 CAN" },
+    "74": { "home": 1, "away": 1, "homeWin": false, "awayWin": true,  "status": "ft", "_note": "GER 1-1 PAR (PAR wins pens)" },
+    "75": { "home": 1, "away": 1, "homeWin": false, "awayWin": true,  "status": "ft", "_note": "NED 1-1 MAR (MAR wins pens)" },
+    "76": { "home": 2, "away": 1, "homeWin": true,  "awayWin": false, "status": "ft", "_note": "BRA 2-1 JPN" }
   }
 }
