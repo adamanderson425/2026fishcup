@@ -2071,6 +2071,28 @@ function parseESPN(events) {
 // ═══════════════════════════════════════════════════════
 
 function isFamilyTeam(code) { return !!FAMILY[code]; }
+
+// Returns true if this family team has lost a knockout match (R32–SF).
+function isTeamEliminated(code) {
+  const roundsToCheck = ['r32', 'r16', 'qf', 'sf'];
+  for (const round of roundsToCheck) {
+    const matches = KNOCKOUT_MATCHES[round] || [];
+    for (const m of matches) {
+      if (m.home !== code && m.away !== code) continue;
+      const s = scores[m.id];
+      if (!s || s.status !== 'ft') continue;
+      const homeWon = s.homeWin != null ? s.homeWin : (s.home > s.away);
+      const teamWon = (m.home === code) ? homeWon : !homeWon;
+      if (!teamWon) return true;
+    }
+  }
+  return false;
+}
+
+// Family teams still alive in the tournament (not yet eliminated).
+function activeFamilyTeams() {
+  return Object.entries(FAMILY).filter(([code]) => !isTeamEliminated(code));
+}
 function isKnockoutPlaceholder(code) { return /^[W12L3]/.test(code); }
 
 function isPossibleMatch(m) {
@@ -2559,15 +2581,24 @@ function buildPillHTML(code, f) {
 }
 
 function renderTeamPills() {
+  // If the currently selected team was just eliminated, clear the selection.
+  if (selectedTeam && isTeamEliminated(selectedTeam)) {
+    selectedTeam = null;
+    renderHero(null);
+    renderTeamPanel(null);
+    saveState();
+  }
+
   const el = document.getElementById('team-pills');
-  const once = Object.entries(FAMILY).map(([code, f]) => buildPillHTML(code, f)).join('');
+  const alive = activeFamilyTeams();
+  const once = alive.map(([code, f]) => buildPillHTML(code, f)).join('');
   // Duplicate for seamless auto-scroll loop
   el.innerHTML = once + once;
   // Reset scroll so animation restarts cleanly
   const wrap = el.closest('.team-filter-wrap');
   if (wrap) wrap.scrollLeft = 0;
   pillScrollPos = 0;
-  syncMobileSelect();
+  refreshMobileTeamSelect(); // rebuild dropdown to remove eliminated teams
 }
 
 // ── MOBILE TEAM SELECT ───────────────────────────────────────
@@ -2575,8 +2606,17 @@ function renderTeamPills() {
 function initMobileTeamSelect() {
   const sel = document.getElementById('team-select-mobile');
   if (!sel) return;
-  // Populate options
-  const opts = Object.entries(FAMILY).map(([code, f]) =>
+  const opts = activeFamilyTeams().map(([code, f]) =>
+    `<option value="${code}">${f.flag} ${f.name} · ${f.person}</option>`
+  ).join('');
+  sel.innerHTML = `<option value="">🌍 All teams</option>${opts}`;
+  syncMobileSelect();
+}
+
+function refreshMobileTeamSelect() {
+  const sel = document.getElementById('team-select-mobile');
+  if (!sel) return;
+  const opts = activeFamilyTeams().map(([code, f]) =>
     `<option value="${code}">${f.flag} ${f.name} · ${f.person}</option>`
   ).join('');
   sel.innerHTML = `<option value="">🌍 All teams</option>${opts}`;
