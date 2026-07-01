@@ -1397,7 +1397,9 @@ function isMatchPast(m) {
   const s = scores[m.id];
   if (s?.status === 'ft')   return true;
   if (s?.status === 'live' || s?.status === 'ht') return false;
-  // Time-based: treat the sort-key value as "fake UTC" so arithmetic works
+  // If ESPN explicitly says the match hasn't started, trust it over the clock.
+  if (s?.status === 'sched') return false;
+  // Time-based fallback: treat the sort-key value as "fake UTC" so arithmetic works
   // (matchSortKey and getETNowKey both subtract 4 h, so differences cancel).
   const kickoffMs = new Date(matchSortKey(m) + ':00Z').getTime();
   const nowMs     = new Date(getETNowKey()    + ':00Z').getTime();
